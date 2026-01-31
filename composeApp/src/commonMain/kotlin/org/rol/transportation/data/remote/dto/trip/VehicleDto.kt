@@ -1,0 +1,47 @@
+package org.rol.transportation.data.remote.dto.trip
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class VehicleDto (
+    val id: Int,
+    val placa: String,
+    val codigoInterno: String,
+    val modeloId: Int,
+    val anio: Int,
+    val vin: String,
+    val numeroMotor: String,
+    val numeroSerie: String,
+    val color: String,
+    val combustible: String,
+    val carroceria: String,
+    val categoria: String,
+    val cargaUtil: String,
+    val pesoBruto: String,
+    val pesoNeto: String,
+    val asientos: Int,
+    val pasajeros: Int,
+    val ejes: Int,
+    val ruedas: Int,
+    val kilometraje: Int,
+    val estado: String,
+    val imagenes: List<String> = emptyList(),
+    val placaAnterior: String? = null,
+    val anotaciones: String? = null,
+    val sede: String,
+    val potencia: String,
+    val formulaRodante: String,
+    val version: String,
+    val cilindros: Int,
+    val cilindrada: String,
+    val longitud: String,
+    val altura: String,
+    val ancho: String,
+    val creadoEn: String,
+    val actualizadoEn: String,
+    val eliminadoEn: String? = null,
+    val marca: String,
+    val modelo: String,
+    val rol: String,
+    val esPrincipal: Boolean
+)
