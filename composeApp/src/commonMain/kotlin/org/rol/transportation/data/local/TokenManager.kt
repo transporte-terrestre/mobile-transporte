@@ -10,6 +10,9 @@ class TokenManager(private val settings: Settings) {
         private const val KEY_USER_ID = "user_id"
         private const val KEY_USER_EMAIL = "user_email"
         private const val KEY_USER_NAME = "user_name"
+
+        private const val KEY_DRIVER_DNI = "driver_dni"
+        private const val KEY_DRIVER_LICENSE = "driver_license"
     }
 
     fun saveToken(token: String) {
@@ -26,6 +29,11 @@ class TokenManager(private val settings: Settings) {
         settings[KEY_USER_NAME] = name
     }
 
+    fun saveDriverData(dni: String, licenseNumber: String) {
+        settings[KEY_DRIVER_DNI] = dni
+        settings[KEY_DRIVER_LICENSE] = licenseNumber
+    }
+
     fun getUserId(): Int? {
         return settings.getIntOrNull(KEY_USER_ID)
     }
@@ -36,6 +44,14 @@ class TokenManager(private val settings: Settings) {
 
     fun getUserName(): String? {
         return settings.getStringOrNull(KEY_USER_NAME)
+    }
+
+    fun getDriverDni(): String? {
+        return settings.getStringOrNull(KEY_DRIVER_DNI)
+    }
+
+    fun getLicenseDriver(): String? {
+        return settings.getStringOrNull(KEY_DRIVER_LICENSE)
     }
 
     fun isLoggedIn(): Boolean {

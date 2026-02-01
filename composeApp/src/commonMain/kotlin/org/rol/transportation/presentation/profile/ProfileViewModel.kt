@@ -26,11 +26,15 @@ class ProfileViewModel(
         val userName = tokenManager.getUserName()
         val userEmail = tokenManager.getUserEmail()
         val token = tokenManager.getToken()
+        val dniDriver = tokenManager.getDriverDni()
+        val licenseDriver = tokenManager.getLicenseDriver()
 
         _uiState.update { it.copy(
             userName = userName,
             userEmail = userEmail,
-            token = token
+            token = token,
+            dniDriver = dniDriver,
+            licenseDriver = licenseDriver
         )}
     }
 

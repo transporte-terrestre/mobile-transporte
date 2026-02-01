@@ -21,13 +21,6 @@ class HomeViewModel(
         loadTrips()
     }
 
-    fun onSearchQueryChanged(query: String) {
-        _uiState.update { it.copy(searchQuery = query) }
-        if (query.length >= 3 || query.isEmpty()) {
-            loadTrips(search = query.ifEmpty { null })
-        }
-    }
-
     fun onRefresh() {
         loadTrips()
     }

@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.rol.transportation.data.local.TokenManager
 import org.rol.transportation.data.remote.api.AuthApi
-import org.rol.transportation.domain.model.User
+import org.rol.transportation.domain.model.DriverAuth
 import org.rol.transportation.utils.Resource
 
 class AuthRepositoryImpl(
@@ -12,7 +12,7 @@ class AuthRepositoryImpl(
     private val tokenManager: TokenManager
 ) : AuthRepository {
 
-    override suspend fun login(email: String, password: String, rememberSession: Boolean): Flow<Resource<User>> = flow {
+    override suspend fun loginDriver(email: String, password: String, rememberSession: Boolean): Flow<Resource<DriverAuth>> = flow {
         try {
             emit(Resource.Loading)
 
@@ -24,26 +24,33 @@ class AuthRepositoryImpl(
                 tokenManager.saveToken(response.accessToken)
 
                 tokenManager.saveUserData(
-                    userId = response.user.id,
-                    email = response.user.email,
-                    name = response.user.nombreCompleto
+                    userId = response.conductor.id,
+                    email = response.conductor.email,
+                    name = response.conductor.nombreCompleto
+                )
+                // Guardar DNI del conductor (para uso posterior)
+                tokenManager.saveDriverData(
+                    dni = response.conductor.dni,
+                    licenseNumber = response.conductor.numeroLicencia
                 )
             }
 
             // Mapear a Domain Model
-            val user = User(
-                id = response.user.id,
-                nombres = response.user.nombres,
-                apellidos = response.user.apellidos,
-                nombreCompleto = response.user.nombreCompleto,
-                email = response.user.email,
-                roles = response.user.roles,
-                fotocheck = response.user.fotocheck,
-                creadoEn = response.user.creadoEn,
-                actualizadoEn = response.user.actualizadoEn
+            val driver = DriverAuth(
+                id = response.conductor.id,
+                dni = response.conductor.dni,
+                nombres = response.conductor.nombres,
+                apellidos = response.conductor.apellidos,
+                nombreCompleto = response.conductor.nombreCompleto,
+                email = response.conductor.email,
+                celular = response.conductor.celular,
+                numeroLicencia = response.conductor.numeroLicencia,
+                claseLicencia = response.conductor.claseLicencia,
+                categoriaLicencia = response.conductor.categoriaLicencia,
+                fotocheck = response.conductor.fotocheck
             )
 
-            emit(Resource.Success(user))
+            emit(Resource.Success(driver))
 
         } catch (e: Exception) {
             emit(Resource.Error(

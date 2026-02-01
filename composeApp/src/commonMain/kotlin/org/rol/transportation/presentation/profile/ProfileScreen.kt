@@ -2,7 +2,6 @@ package org.rol.transportation.presentation.profile
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,17 +16,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -100,14 +95,13 @@ fun ProfileScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Espacio circular para foto de usuario
             Surface(
                 modifier = Modifier.size(120.dp),
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 border = BorderStroke(2.dp, YellowPrimary)
             ) {
-                // Aquí podrías usar AsyncImage de Coil. Por ahora un icono:
+
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = "Foto de perfil",
@@ -142,11 +136,19 @@ fun ProfileScreen(
                     InfoLabel(label = "CORREO ELECTRÓNICO", value = it)
                 }
 
+                uiState.dniDriver?.let {
+                    InfoLabel(label = "DNI DE CONDUCTOR", value = it)
+                }
+
+                uiState.licenseDriver?.let {
+                    InfoLabel(label = "LICENCIA", value = it)
+                }
+
                 Spacer(modifier = Modifier.height(12.dp))
 
                 uiState.token?.let {
                     InfoLabel(
-                        label = "TOKEN DE ACCESO",
+                        label = "TOKEN (primeros 30 caracteres)",
                         value = "${it.take(30)}..."
                     )
                 }
