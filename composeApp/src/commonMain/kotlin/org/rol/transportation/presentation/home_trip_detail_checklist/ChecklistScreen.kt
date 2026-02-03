@@ -21,7 +21,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Error
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -70,12 +72,49 @@ fun ChecklistScreen(
     val uiState by viewModel.uiState.collectAsState()
     val isDark = isSystemInDarkTheme()
 
-    LaunchedEffect(uiState.isSaved) {
-        if (uiState.isSaved) {
-            delay(500)
-            onNavigateBack()
-        }
+    if (uiState.isSaved) {
+        AlertDialog(
+            onDismissRequest = {
+                onNavigateBack()
+            },
+            icon = {
+                Icon(
+                    imageVector = Icons.Rounded.CheckCircle,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = "¡Guardado Exitoso!",
+                    textAlign = TextAlign.Center
+                )
+            },
+            text = {
+                Text(
+                    text = "La lista de verificación de ${uiState.tipo.displayName} se ha registrado correctamente.",
+                    textAlign = TextAlign.Center
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { onNavigateBack() }
+                ) {
+                    Text(
+                        "Aceptar",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+
+            containerColor = MaterialTheme.colorScheme.surface,
+            iconContentColor = MaterialTheme.colorScheme.primary,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            tonalElevation = 6.dp
+        )
     }
+
 
     Scaffold(
         topBar = {
