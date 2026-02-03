@@ -36,10 +36,6 @@ class LoginViewModel(
         )}
     }
 
-    fun onRememberSessionChanged(remember: Boolean) {
-        _uiState.update { it.copy(rememberSession = remember) }
-    }
-
     fun onLoginClick() {
         val currentState = _uiState.value
 
@@ -57,7 +53,7 @@ class LoginViewModel(
             loginUseCase(
                 email = currentState.email,
                 password = currentState.password,
-                rememberSession = currentState.rememberSession
+                rememberSession = true
             ).collect { result ->
                 when (result) {
                     is Resource.Loading -> {

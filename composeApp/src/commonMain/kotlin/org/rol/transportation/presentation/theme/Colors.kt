@@ -15,3 +15,13 @@ val GrayText = Color(0xFF6B7280)
 val GrayPlaceholder = Color(0xFFD1D5DB)
 val LightGrayBg = Color(0xFFF9FAFB)
 val CardBorder = Color(0xFFE5E7EB)
+
+val ActionBlueBgLight = Color(0xFFEAF2FF)
+val ActionBlueTextLight = Color(0xFF1E40AF)
+val ActionGreenBgLight = Color(0xFFE6FFEA)
+val ActionGreenTextLight = Color(0xFF166534)
+
+val ActionBlueBgDark = Color(0xFF1E293B)
+val ActionBlueTextDark = Color(0xFF93C5FD)
+val ActionGreenBgDark = Color(0xFF14281A)
+val ActionGreenTextDark = Color(0xFF86EFAC)

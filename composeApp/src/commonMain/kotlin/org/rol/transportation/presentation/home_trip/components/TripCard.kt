@@ -20,8 +20,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.DirectionsCar
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -37,7 +35,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.rol.transportation.domain.model.Trip
 import org.rol.transportation.domain.model.enums.TripStatus
-import org.rol.transportation.presentation.theme.CardGrayList
 import org.rol.transportation.presentation.theme.YellowPrimary
 import org.rol.transportation.utils.DateFormatter
 
@@ -56,10 +53,9 @@ fun TripCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            // CAMBIO: Usamos el slot del tema en lugar de la constante fija
+
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        // Agregamos borde solo en modo claro para que la tarjeta blanca no se pierda
         border = if (!isDark) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {

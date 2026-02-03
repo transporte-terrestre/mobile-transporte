@@ -156,7 +156,6 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Botón de Cerrar Sesión con tono rojizo
             Button(
                 onClick = { viewModel.onLogoutClick() },
                 modifier = Modifier

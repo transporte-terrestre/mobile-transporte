@@ -10,6 +10,7 @@ import org.koin.compose.koinInject
 import org.rol.transportation.data.local.TokenManager
 import org.rol.transportation.presentation.home_trip.HomeScreen
 import org.rol.transportation.presentation.home_trip_detail.TripDetailScreen
+import org.rol.transportation.presentation.home_trip_detail_checklist.ChecklistScreen
 import org.rol.transportation.presentation.login.LoginScreen
 import org.rol.transportation.presentation.profile.ProfileScreen
 
@@ -55,6 +56,18 @@ fun AppNavigation() {
             val args = backStackEntry.toRoute<Screen.TripDetail>()
             TripDetailScreen(
                 tripId = args.tripId,
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToChecklist = { tripId, tipo ->
+                    navController.navigate(Screen.Checklist(tripId, tipo))
+                }
+            )
+        }
+
+        composable<Screen.Checklist> { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.Checklist>()
+            ChecklistScreen(
+                tripId = args.tripId,
+                tipo = args.tipo,
                 onNavigateBack = { navController.navigateUp() }
             )
         }
@@ -72,5 +85,6 @@ fun AppNavigation() {
                 onNavigateBack = { navController.navigateUp() }
             )
         }
+
     }
 }

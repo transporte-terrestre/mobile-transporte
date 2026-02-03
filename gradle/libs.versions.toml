@@ -21,6 +21,7 @@ multiplatform-settings = "1.2.0"
 buildkonfig = "0.17.1"
 kotlinx-datetime = "0.5.0"
 coil = "3.0.4"
+paging3 = "3.4.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -70,6 +71,11 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 # Coil3
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil" }
+
+# Paging3
+paging3-common = { module = "androidx.paging:paging-common", version.ref = "paging3" }
+paging3-compose = { module = "androidx.paging:paging-compose", version.ref = "paging3" }
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

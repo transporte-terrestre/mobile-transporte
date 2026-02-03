@@ -15,4 +15,10 @@ sealed class Screen {
 
     @Serializable
     data object Profile : Screen()
+
+    @Serializable
+    data class Checklist(
+        val tripId: Int,
+        val tipo: String
+    ) : Screen()
 }

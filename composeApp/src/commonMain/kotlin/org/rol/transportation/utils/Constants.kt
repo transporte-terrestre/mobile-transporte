@@ -7,5 +7,7 @@ object Constants {
     const val LOGIN_ENDPOINT = "auth/conductor/login"
     const val TRIP_ENDPOINT = "viaje/find-all"
     const val TRIP_DETAIL_ENDPOINT = "viaje/find-one"
+    const val CHECKLIST_ITEMS_ENDPOINT = "viaje/checklist-item/find-all"
+    const val TRIP_CHECKLIST_ENDPOINT = "viaje"
 
 }

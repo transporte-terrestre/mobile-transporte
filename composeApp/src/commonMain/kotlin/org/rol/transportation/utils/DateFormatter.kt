@@ -9,7 +9,7 @@ object DateFormatter {
     fun formatDate(date: String): String {
         return try {
             val instant = Instant.parse(date)
-            val dateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
+            val dateTime = instant.toLocalDateTime(TimeZone.UTC)
 
             val day = dateTime.dayOfMonth.toString().padStart(2, '0')
 
@@ -31,40 +31,6 @@ object DateFormatter {
         }
     }
 
-    fun formatRange(departure: String, arrival: String): String {
-        return try {
-            val start = Instant.parse(departure)
-                .toLocalDateTime(TimeZone.currentSystemDefault())
-
-            val end = Instant.parse(arrival)
-                .toLocalDateTime(TimeZone.currentSystemDefault())
-
-            val date =
-                "${start.dayOfMonth.toString().padStart(2, '0')} " +
-                        start.month.name
-                            .lowercase()
-                            .replaceFirstChar { it.uppercase() }
-                            .take(3)
-
-            val startHour = formatHour(start.hour)
-            val endHour = formatHour(end.hour)
-
-            "$date $startHour → $endHour"
-        } catch (e: Exception) {
-            departure
-        }
-    }
-
-    private fun formatHour(hour24: Int): String {
-        val amPm = if (hour24 >= 12) "PM" else "AM"
-        val hour = when {
-            hour24 == 0 -> 12
-            hour24 > 12 -> hour24 - 12
-            else -> hour24
-        }
-        return "$hour $amPm"
-    }
-
     private fun formatHourWithMinutes(hour24: Int, minute: Int): String {
         val amPm = if (hour24 >= 12) "PM" else "AM"
         val hour = when {
@@ -78,15 +44,17 @@ object DateFormatter {
     fun formatOnlyTime(date: String): String {
         return try {
             val instant = Instant.parse(date)
-            val dateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-            // Usamos tu lógica existente de formateo
-            val amPm = if (dateTime.hour >= 12) "PM" else "AM"
+
+            val utcDateTime = instant.toLocalDateTime(TimeZone.UTC)
+
+            val amPm = if (utcDateTime.hour >= 12) "PM" else "AM"
             val hour = when {
-                dateTime.hour == 0 -> 12
-                dateTime.hour > 12 -> dateTime.hour - 12
-                else -> dateTime.hour
+                utcDateTime.hour == 0 -> 12
+                utcDateTime.hour > 12 -> utcDateTime.hour - 12
+                else -> utcDateTime.hour
             }
-            "$hour:${dateTime.minute.toString().padStart(2, '0')}"
+
+            "$hour:${utcDateTime.minute.toString().padStart(2, '0')} $amPm"
         } catch (e: Exception) {
             "--:--"
         }
@@ -95,10 +63,11 @@ object DateFormatter {
     fun formatOnlyDate(date: String): String {
         return try {
             val instant = Instant.parse(date)
-            val dateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-            val day = dateTime.dayOfMonth.toString().padStart(2, '0')
-            val month = dateTime.month.name.lowercase().replaceFirstChar { it.uppercase() }.take(3)
-            val year = dateTime.year
+            val utcDateTime = instant.toLocalDateTime(TimeZone.UTC)
+
+            val day = utcDateTime.dayOfMonth.toString().padStart(2, '0')
+            val month = utcDateTime.month.name.lowercase().replaceFirstChar { it.uppercase() }.take(3)
+            val year = utcDateTime.year
             "$day $month $year"
         } catch (e: Exception) {
             date

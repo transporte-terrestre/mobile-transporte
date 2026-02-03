@@ -1,7 +1,6 @@
 package org.rol.transportation.presentation.login
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalShipping
@@ -21,8 +19,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -65,8 +61,7 @@ fun LoginScreen(
         uiState = uiState,
         onEmailChange = viewModel::onEmailChanged,
         onPasswordChange = viewModel::onPasswordChanged,
-        onLoginClick = viewModel::onLoginClick,
-        onRememberSessionChange = viewModel::onRememberSessionChanged
+        onLoginClick = viewModel::onLoginClick
     )
 }
 
@@ -75,7 +70,6 @@ private fun LoginContent(
     uiState: LoginUiState,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
-    onRememberSessionChange: (Boolean) -> Unit,
     onLoginClick: () -> Unit
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
@@ -220,7 +214,7 @@ private fun LoginContent(
                         else
                             PasswordVisualTransformation(),
                         placeholder = {
-                            Text("••••••••••••")
+                            Text("••••••")
                         },
                         leadingIcon = {
                             Icon(
@@ -250,31 +244,7 @@ private fun LoginContent(
                         )
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable {
-                            onRememberSessionChange(!uiState.rememberSession)
-                        }
-                    ) {
-                        Checkbox(
-                            checked = uiState.rememberSession,
-                            onCheckedChange = onRememberSessionChange,
-                            colors = CheckboxDefaults.colors(
-                                checkedColor = MaterialTheme.colorScheme.primary,
-                                checkmarkColor = MaterialTheme.colorScheme.onPrimary
-                            )
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Recordar sesión",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
 
                     Button(
                         onClick = onLoginClick,

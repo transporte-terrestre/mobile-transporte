@@ -5,6 +5,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 
@@ -32,7 +35,7 @@ private val LightColorScheme = lightColorScheme(
     outlineVariant = GrayPlaceholder
 )
 
-private val DarkColorScheme = darkColorScheme(
+    private val DarkColorScheme = darkColorScheme(
     primary = YellowPrimary,
     onPrimary = DarkText,
 
@@ -57,7 +60,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 
-@Composable
+/*@Composable
 fun TransportationTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
@@ -73,4 +76,52 @@ fun TransportationTheme(
         typography = Typography,
         content = content
     )
+}*/
+@Composable
+fun TransportationTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit
+) {
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+
+    val cardButtonsColor = if (darkTheme) DarkCustomColors else LightCustomColors
+
+    CompositionLocalProvider(LocalTransportationColors provides cardButtonsColor) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }
+
+object TransportationTheme {
+    val myColors: TransportationColors
+        @Composable
+        get() = LocalTransportationColors.current
+}
+
+
+@Immutable
+data class TransportationColors(
+    val bgDeparture: Color = Color.Unspecified,
+    val textDeparture: Color = Color.Unspecified,
+    val bgArrival: Color = Color.Unspecified,
+    val textArrival: Color = Color.Unspecified
+)
+
+val LocalTransportationColors = staticCompositionLocalOf { TransportationColors() }
+
+private val LightCustomColors = TransportationColors(
+    bgDeparture = ActionBlueBgLight,
+    textDeparture = ActionBlueTextLight,
+    bgArrival = ActionGreenBgLight,
+    textArrival = ActionGreenTextLight
+)
+
+private val DarkCustomColors = TransportationColors(
+    bgDeparture = ActionBlueBgDark,
+    textDeparture = ActionBlueTextDark,
+    bgArrival = ActionGreenBgDark,
+    textArrival = ActionGreenTextDark
+)

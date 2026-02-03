@@ -34,8 +34,8 @@ import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.rounded.AssignmentTurnedIn
+import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -60,18 +60,20 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import coil3.compose.AsyncImage
-import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import org.rol.transportation.domain.model.Trip
+import org.rol.transportation.domain.model.enums.ChecklistType
 import org.rol.transportation.domain.model.enums.TripStatus
-import org.rol.transportation.presentation.theme.DarkText
 import org.rol.transportation.presentation.theme.GrayText
+import org.rol.transportation.presentation.theme.TransportationTheme
 import org.rol.transportation.presentation.theme.YellowPrimary
 import org.rol.transportation.utils.DateFormatter
-import transportation_driver.composeapp.generated.resources.Res
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,10 +81,15 @@ import transportation_driver.composeapp.generated.resources.Res
 fun TripDetailScreen(
     tripId: Int,
     onNavigateBack: () -> Unit,
+    onNavigateToChecklist: (tripId: Int, tipo: String) -> Unit,
     viewModel: TripDetailViewModel = koinViewModel { parametersOf(tripId) }
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isDark = isSystemInDarkTheme()
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.refreshData()
+    }
 
     Scaffold(
         topBar = {
@@ -142,7 +149,10 @@ fun TripDetailScreen(
                 }
 
                 uiState.viaje != null -> {
-                    TripDetailContent(trip = uiState.viaje!!)
+                    TripDetailContent(trip = uiState.viaje!!,
+                        hasDepartureStarted = uiState.hasDepartureStarted,
+                        hasArrivalStarted = uiState.hasArrivalStarted,
+                        onNavigateToChecklist = onNavigateToChecklist)
                 }
             }
         }
@@ -151,7 +161,10 @@ fun TripDetailScreen(
 
 
 @Composable
-private fun TripDetailContent(trip: Trip) {
+private fun TripDetailContent(trip: Trip,
+                              hasDepartureStarted: Boolean,
+                              hasArrivalStarted: Boolean,
+                              onNavigateToChecklist: (tripId: Int, tipo: String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -262,14 +275,103 @@ private fun TripDetailContent(trip: Trip) {
             }
         }
 
-        // Botón Checklist
-        Button(
-            onClick = { },
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = YellowPrimary)
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
         ) {
-            Text("VER CHECKLIST", fontWeight = FontWeight.Black, color = DarkText)
+            Row(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+
+                // 1. Configuración Salida
+                val bgDeparture = if (hasDepartureStarted) // Ya no usas uiState here
+                    TransportationTheme.myColors.bgArrival
+                else
+                    TransportationTheme.myColors.bgDeparture
+
+                val textDeparture = if (hasDepartureStarted)
+                    TransportationTheme.myColors.textArrival
+                else
+                    TransportationTheme.myColors.textDeparture
+
+                // 2. Configuración Llegada
+                val bgArrival = if (hasArrivalStarted) // Ya no usas uiState here
+                    TransportationTheme.myColors.bgArrival
+                else
+                    TransportationTheme.myColors.bgDeparture
+
+                val textArrival = if (hasArrivalStarted)
+                    TransportationTheme.myColors.textArrival
+                else
+                    TransportationTheme.myColors.textDeparture
+
+                ActionButton(
+                    text = "Check Salida",
+                    icon = Icons.Rounded.AssignmentTurnedIn,
+                    backgroundColor = bgDeparture,
+                    contentColor = textDeparture,
+                    onClick = { onNavigateToChecklist(trip.id, ChecklistType.SALIDA.value) },
+                    modifier = Modifier.weight(1f)
+                )
+
+                ActionButton(
+                    text = "Check Llegada",
+                    icon = Icons.Rounded.Flag,
+                    backgroundColor = bgArrival,
+                    contentColor = textArrival,
+                    onClick = { onNavigateToChecklist(trip.id, ChecklistType.LLEGADA.value) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+
+@Composable
+fun ActionButton(
+    text: String,
+    icon: ImageVector,
+    backgroundColor: Color,
+    contentColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.height(80.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = backgroundColor
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(26.dp)
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = contentColor,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -361,7 +463,7 @@ fun StatusBanner(status: TripStatus) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.CheckCircle, null, tint = Color.White)
                 Spacer(Modifier.width(12.dp))
-                Text("ESTADO DEL VIAJE", fontWeight = FontWeight.Black, color = Color.White)
+                Text("ESTADO", fontWeight = FontWeight.Black, color = Color.White)
             }
             Surface(
                 shape = CircleShape,

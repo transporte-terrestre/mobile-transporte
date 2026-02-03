@@ -2,14 +2,18 @@ package org.rol.transportation.di
 
 import org.koin.dsl.module
 import org.koin.core.module.dsl.viewModel
+import org.rol.transportation.domain.usecase.GetAllChecklistItemsUseCase
+import org.rol.transportation.domain.usecase.GetTripChecklistUseCase
 import org.rol.transportation.domain.usecase.GetTripDetailUseCase
-import org.rol.transportation.domain.usecase.GetTripsUseCase
+import org.rol.transportation.domain.usecase.GetTripsPagedUseCase
 import org.rol.transportation.domain.usecase.IsLoggedInUseCase
 import org.rol.transportation.domain.usecase.LoginUseCase
 import org.rol.transportation.domain.usecase.LogoutUseCase
+import org.rol.transportation.domain.usecase.UpsertTripChecklistUseCase
 import org.rol.transportation.domain.usecase.ValidateEmailUseCase
 import org.rol.transportation.presentation.home_trip.HomeViewModel
 import org.rol.transportation.presentation.home_trip_detail.TripDetailViewModel
+import org.rol.transportation.presentation.home_trip_detail_checklist.ChecklistViewModel
 import org.rol.transportation.presentation.profile.ProfileViewModel
 import org.rol.transportation.presentation.login.LoginViewModel
 
@@ -20,8 +24,11 @@ val appModule = module {
     factory { LogoutUseCase(get()) }
     factory { IsLoggedInUseCase(get()) }
     factory { ValidateEmailUseCase() }
-    factory { GetTripsUseCase(get()) }
+    factory { GetTripsPagedUseCase(get()) }
     factory { GetTripDetailUseCase(get()) }
+    factory { GetAllChecklistItemsUseCase(get()) }
+    factory { GetTripChecklistUseCase(get()) }
+    factory { UpsertTripChecklistUseCase(get()) }
 
     // ViewModels
     viewModel { LoginViewModel(get(), get()) }
@@ -30,7 +37,17 @@ val appModule = module {
     viewModel { parameters ->
         TripDetailViewModel(
             getTripDetailUseCase = get(),
-            tripId = parameters.get()
+            tripId = parameters.get(),
+            getTripChecklistUseCase = get()
+        )
+    }
+    viewModel { parameters ->
+        ChecklistViewModel(
+            getAllChecklistItemsUseCase = get(),
+            getTripChecklistUseCase = get(),
+            upsertTripChecklistUseCase = get(),
+            tripId = parameters.get(),
+            tipo = parameters.get()
         )
     }
 

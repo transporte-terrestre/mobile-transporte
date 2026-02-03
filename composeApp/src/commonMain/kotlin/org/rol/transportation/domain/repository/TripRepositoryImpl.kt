@@ -1,7 +1,11 @@
 package org.rol.transportation.domain.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.rol.transportation.data.paging.TripPagingSource
 import org.rol.transportation.data.remote.api.TripApi
 import org.rol.transportation.data.remote.dto.trip.TripDto
 import org.rol.transportation.domain.model.Customer
@@ -16,21 +20,21 @@ class TripRepositoryImpl(
     private val tripApi: TripApi
 ) : TripRepository {
 
-    override suspend fun getTrips(
-        page: Int,
-        limit: Int,
-        search: String?
-    ): Flow<Resource<Pair<List<Trip>, Int>>> = flow {
-        try {
-            emit(Resource.Loading)
-
-            val response = tripApi.getTrips(page, limit, search)
-            val trips = response.data.map { it.toDomain() }
-
-            emit(Resource.Success(Pair(trips, response.meta.total)))
-        } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Error al obtener viajes"))
-        }
+    override fun getTripsPaged(): Flow<PagingData<Trip>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 10,
+                enablePlaceholders = false,
+                initialLoadSize = 10,
+                prefetchDistance = 2
+            ),
+            pagingSourceFactory = {
+                TripPagingSource(
+                    tripApi = tripApi,
+                    toDomain = { it.toDomain() }
+                )
+            }
+        ).flow
     }
 
     override suspend fun getTripById(id: Int): Flow<Resource<Trip>> = flow {
