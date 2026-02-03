@@ -92,6 +92,7 @@ class ChecklistRepositoryImpl(
                 seccion = item.seccion,
                 orden = item.orden
             )
-        }
+        },
+        message = message
     )
 }

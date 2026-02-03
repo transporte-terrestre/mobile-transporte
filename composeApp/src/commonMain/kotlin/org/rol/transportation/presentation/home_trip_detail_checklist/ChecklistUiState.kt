@@ -13,6 +13,7 @@ data class ChecklistUiState(
     val isSaving: Boolean = false,
     val error: String? = null,
     val isSaved: Boolean = false,
+    val successMessage: String? = null,
     val existingChecklist: TripChecklist? = null,
     val tipo: ChecklistType = ChecklistType.SALIDA,
     val hasChanges: Boolean = false

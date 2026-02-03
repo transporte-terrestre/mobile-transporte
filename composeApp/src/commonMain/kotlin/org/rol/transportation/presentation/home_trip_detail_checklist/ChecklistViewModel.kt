@@ -24,7 +24,6 @@ class ChecklistViewModel(
 
     private val checklistType = ChecklistType.fromString(tipo)
 
-    // NUEVO: Estado inicial guardado para detectar cambios
     private var initialState: Map<Int, Boolean> = emptyMap()
     private var initialObservaciones: String = ""
 
@@ -43,14 +42,12 @@ class ChecklistViewModel(
                         _uiState.update { it.copy(isLoading = true) }
                     }
                     is Resource.Success -> {
-                        // Ya existe un checklist guardado
                         val checklist = result.data
                         val itemsBySections = checklist.items.groupBy { it.seccion }
                         val selectedItems = checklist.items.associate { item ->
                             item.checklistItemId to item.completado
                         }
 
-                        // Guardar estado inicial
                         initialState = selectedItems
                         initialObservaciones = checklist.observaciones ?: ""
 
@@ -97,7 +94,6 @@ class ChecklistViewModel(
                         val itemsBySections = items.groupBy { it.seccion }
                         val selectedItems = items.associate { it.checklistItemId to false }
 
-                        // Guardar estado inicial
                         initialState = selectedItems
                         initialObservaciones = ""
 
@@ -124,7 +120,6 @@ class ChecklistViewModel(
             }
         }
     }
-
 
     fun toggleSection(sectionName: String) {
         val itemsInSection = _uiState.value.itemsBySections[sectionName] ?: return
@@ -178,7 +173,7 @@ class ChecklistViewModel(
         }
     }
 
-    // Detectar si hay cambios respecto al estado inicial
+
     private fun hasStateChanged(
         currentItems: Map<Int, Boolean>,
         currentObservaciones: String
@@ -204,7 +199,8 @@ class ChecklistViewModel(
                         _uiState.update { it.copy(isSaving = true, error = null) }
                     }
                     is Resource.Success -> {
-                        // Actualizar estado inicial después de guardar
+                        val checklistSaved = result.data
+
                         initialState = state.selectedItems
                         initialObservaciones = state.observaciones
 
@@ -213,7 +209,8 @@ class ChecklistViewModel(
                                 isSaving = false,
                                 isSaved = true,
                                 hasChanges = false,
-                                error = null
+                                error = null,
+                                successMessage = checklistSaved.message ?: "Guardado exitoso"
                             )
                         }
                     }

@@ -8,5 +8,6 @@ data class TripChecklist(
     val tipo: ChecklistType,
     val validadoEn: String,
     val observaciones: String?,
-    val items: List<ChecklistItemDetail>
+    val items: List<ChecklistItemDetail>,
+    val message: String?
 )

@@ -12,5 +12,6 @@ data class TripChecklistDto(
     val observaciones: String? = null,
     val creadoEn: String,
     val actualizadoEn: String,
-    val items: List<ChecklistItemDetailDto>
+    val items: List<ChecklistItemDetailDto>,
+    val message: String? = null
 )
