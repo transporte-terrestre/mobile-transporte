@@ -10,6 +10,7 @@ class TokenManager(private val settings: Settings) {
         private const val KEY_USER_ID = "user_id"
         private const val KEY_USER_EMAIL = "user_email"
         private const val KEY_USER_NAME = "user_name"
+        private const val KEY_USER_PHOTO = "user_photo"
 
         private const val KEY_DRIVER_DNI = "driver_dni"
         private const val KEY_DRIVER_LICENSE = "driver_license"
@@ -23,10 +24,11 @@ class TokenManager(private val settings: Settings) {
         return settings.getStringOrNull(KEY_ACCESS_TOKEN)
     }
 
-    fun saveUserData(userId: Int, email: String, name: String) {
+    fun saveUserData(userId: Int, email: String, name: String, photoUrl: String?) {
         settings[KEY_USER_ID] = userId
         settings[KEY_USER_EMAIL] = email
         settings[KEY_USER_NAME] = name
+        settings[KEY_USER_PHOTO] = photoUrl ?: ""
     }
 
     fun saveDriverData(dni: String, licenseNumber: String) {
@@ -44,6 +46,10 @@ class TokenManager(private val settings: Settings) {
 
     fun getUserName(): String? {
         return settings.getStringOrNull(KEY_USER_NAME)
+    }
+
+    fun getUserPhoto(): String? {
+        return settings.getStringOrNull(KEY_USER_PHOTO)
     }
 
     fun getDriverDni(): String? {

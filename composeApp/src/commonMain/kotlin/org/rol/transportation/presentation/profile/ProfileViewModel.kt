@@ -25,6 +25,7 @@ class ProfileViewModel(
     private fun loadUserData() {
         val userName = tokenManager.getUserName()
         val userEmail = tokenManager.getUserEmail()
+        val photo = tokenManager.getUserPhoto()
         val token = tokenManager.getToken()
         val dniDriver = tokenManager.getDriverDni()
         val licenseDriver = tokenManager.getLicenseDriver()
@@ -32,6 +33,7 @@ class ProfileViewModel(
         _uiState.update { it.copy(
             userName = userName,
             userEmail = userEmail,
+            userPhoto = photo,
             token = token,
             dniDriver = dniDriver,
             licenseDriver = licenseDriver

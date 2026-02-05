@@ -38,8 +38,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import org.koin.compose.viewmodel.koinViewModel
 import org.rol.transportation.presentation.home_trip_detail.DetailSectionCard
 import org.rol.transportation.presentation.home_trip_detail.InfoLabel
@@ -96,18 +98,27 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Surface(
-                modifier = Modifier.size(120.dp),
+                modifier = Modifier.size(150.dp),
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 border = BorderStroke(2.dp, YellowPrimary)
             ) {
 
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Foto de perfil",
-                    modifier = Modifier.padding(24.dp),
-                    tint = MaterialTheme.colorScheme.onSurface
-                )
+                if (!uiState.userPhoto.isNullOrBlank()) {
+                    AsyncImage(
+                        model = uiState.userPhoto,
+                        contentDescription = "Foto de perfil",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Foto por defecto",
+                        modifier = Modifier.padding(24.dp),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))

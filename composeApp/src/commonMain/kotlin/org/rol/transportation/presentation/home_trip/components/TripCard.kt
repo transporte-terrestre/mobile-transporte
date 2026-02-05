@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.rol.transportation.domain.model.Trip
 import org.rol.transportation.domain.model.enums.TripStatus
@@ -53,13 +54,13 @@ fun TripCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-
             containerColor = MaterialTheme.colorScheme.surface
         ),
         border = if (!isDark) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -72,40 +73,50 @@ fun TripCard(
 
             Column(
                 modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Top
                 ) {
-                    Text(
-                        text = trip.cliente.nombreCompleto,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
+
+                    Column(
                         modifier = Modifier.weight(1f),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        RouteStep(text = trip.ruta?.origen ?: "", isStart = true)
+
+                        Box(
+                            modifier = Modifier
+                                .padding(start = 7.dp)
+                                .width(2.dp)
+                                .height(24.dp)
+                                .background(MaterialTheme.colorScheme.outlineVariant)
+                        )
+                        RouteStep(text = trip.ruta?.destino ?: "", isStart = false)
+                    }
+
                     StatusBadge(status = trip.estado)
                 }
 
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    RouteStep(text = trip.ruta?.origen ?: "", isStart = true)
-                    Box(
-                        modifier = Modifier
-                            .padding(start = 6.dp)
-                            .width(1.dp)
-                            .height(20.dp)
-                            .background(MaterialTheme.colorScheme.outlineVariant)
-                    )
-                    RouteStep(text = trip.ruta?.destino ?: "", isStart = false)
-                }
+                Spacer(Modifier.width(12.dp))
+
+                Text(
+                    text = "Cliente: ${trip.cliente.nombreCompleto}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
 
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 4.dp),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                 )
 
+                // Fecha
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Default.CalendarToday,
@@ -116,7 +127,7 @@ fun TripCard(
                     Spacer(Modifier.width(8.dp))
                     Text(
                         text = DateFormatter.formatDate(trip.fechaSalida),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -130,7 +141,7 @@ fun RouteStep(text: String, isStart: Boolean) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
-                .size(12.dp)
+                .size(16.dp)
                 .background(
                     if (isStart) Color(0xFFFBC02D) else Color.Gray.copy(alpha = 0.5f),
                     CircleShape
@@ -139,7 +150,8 @@ fun RouteStep(text: String, isStart: Boolean) {
         Spacer(Modifier.width(12.dp))
         Text(
             text = text,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
             color = if (isStart) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
         )
     }

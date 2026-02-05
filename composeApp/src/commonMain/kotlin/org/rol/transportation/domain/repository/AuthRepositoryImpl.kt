@@ -23,12 +23,15 @@ class AuthRepositoryImpl(
 
                 tokenManager.saveToken(response.accessToken)
 
+                val photoUrl = response.conductor.fotocheck.firstOrNull()
+
                 tokenManager.saveUserData(
                     userId = response.conductor.id,
                     email = response.conductor.email,
-                    name = response.conductor.nombreCompleto
+                    name = response.conductor.nombreCompleto,
+                    photoUrl = photoUrl
                 )
-                // Guardar DNI del conductor (para uso posterior)
+
                 tokenManager.saveDriverData(
                     dni = response.conductor.dni,
                     licenseNumber = response.conductor.numeroLicencia
