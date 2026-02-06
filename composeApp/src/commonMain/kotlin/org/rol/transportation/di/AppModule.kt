@@ -2,14 +2,12 @@ package org.rol.transportation.di
 
 import org.koin.dsl.module
 import org.koin.core.module.dsl.viewModel
-import org.rol.transportation.domain.usecase.GetAllChecklistItemsUseCase
 import org.rol.transportation.domain.usecase.GetTripChecklistUseCase
 import org.rol.transportation.domain.usecase.GetTripDetailUseCase
 import org.rol.transportation.domain.usecase.GetTripsPagedUseCase
 import org.rol.transportation.domain.usecase.IsLoggedInUseCase
 import org.rol.transportation.domain.usecase.LoginUseCase
 import org.rol.transportation.domain.usecase.LogoutUseCase
-import org.rol.transportation.domain.usecase.UpsertTripChecklistUseCase
 import org.rol.transportation.domain.usecase.ValidateEmailUseCase
 import org.rol.transportation.presentation.home_trip.HomeViewModel
 import org.rol.transportation.presentation.home_trip_detail.TripDetailViewModel
@@ -26,9 +24,7 @@ val appModule = module {
     factory { ValidateEmailUseCase() }
     factory { GetTripsPagedUseCase(get()) }
     factory { GetTripDetailUseCase(get()) }
-    factory { GetAllChecklistItemsUseCase(get()) }
     factory { GetTripChecklistUseCase(get()) }
-    factory { UpsertTripChecklistUseCase(get()) }
 
     // ViewModels
     viewModel { LoginViewModel(get(), get()) }
@@ -43,9 +39,7 @@ val appModule = module {
     }
     viewModel { parameters ->
         ChecklistViewModel(
-            getAllChecklistItemsUseCase = get(),
             getTripChecklistUseCase = get(),
-            upsertTripChecklistUseCase = get(),
             tripId = parameters.get(),
             tipo = parameters.get()
         )

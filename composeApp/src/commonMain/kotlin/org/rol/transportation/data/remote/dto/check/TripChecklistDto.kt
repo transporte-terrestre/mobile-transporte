@@ -4,14 +4,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class TripChecklistDto(
-    val id: Int,
+    val id: Int? = null,
     val viajeId: Int,
     val tipo: String,
-    val validadoPor: Int,
-    val validadoEn: String,
-    val observaciones: String? = null,
-    val creadoEn: String,
-    val actualizadoEn: String,
     val items: List<ChecklistItemDetailDto>,
-    val message: String? = null
+    val creadoEn: String? = null,
+    val actualizadoEn: String? = null
 )

@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UpsertChecklistItemRequest(
-    val id: Int, // checklistItemId
-    val completado: Boolean
+    val checklistItemId: Int,
+    val vehiculoChecklistDocumentId: Int?,
+    val observacion: String? = null
 )

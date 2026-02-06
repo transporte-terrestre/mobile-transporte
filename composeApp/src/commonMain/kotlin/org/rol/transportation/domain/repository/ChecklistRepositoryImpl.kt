@@ -41,7 +41,6 @@ class ChecklistRepositoryImpl(
         }
     }
 
-
     override suspend fun upsertTripChecklist(
         tripId: Int,
         tipo: ChecklistType,
@@ -51,12 +50,29 @@ class ChecklistRepositoryImpl(
         try {
             emit(Resource.Loading)
 
+            // Primero obtenemos el checklist actual para tener la información completa
+            val currentChecklist = checklistApi.getTripChecklist(tripId, tipo.value)
+
+            // Creamos el request con la información actualizada
             val request = UpsertChecklistRequest(
-                observaciones = observaciones,
-                items = items.map { (itemId, completado) ->
+                items = currentChecklist.items.map { item ->
+                    // Buscamos si este item fue marcado/desmarcado
+                    val wasUpdated = items.find { it.first == item.checklistItemId }
+
                     UpsertChecklistItemRequest(
-                        id = itemId, // checklistItemId
-                        completado = completado
+                        checklistItemId = item.checklistItemId,
+                        vehiculoChecklistDocumentId = if (wasUpdated?.second == true) {
+                            // Si fue marcado como completado, mantenemos o asignamos un ID
+                            item.vehiculoChecklistDocumentId ?: item.checklistItemId
+                        } else {
+                            // Si no está completado, enviamos null
+                            null
+                        },
+                        observacion = if (item.checklistItemId == wasUpdated?.first) {
+                            observaciones
+                        } else {
+                            item.observacion
+                        }
                     )
                 }
             )
@@ -70,29 +86,31 @@ class ChecklistRepositoryImpl(
 
     private fun ChecklistItemDto.toDomain() = ChecklistItem(
         id = id,
-        seccion = seccion,
         nombre = nombre,
         descripcion = descripcion,
-        icono = icono,
-        orden = orden
+        orden = orden,
+        creadoEn = creadoEn,
+        actualizadoEn = actualizadoEn,
+        eliminadoEn = eliminadoEn
     )
 
     private fun TripChecklistDto.toDomain() = TripChecklist(
         id = id,
         viajeId = viajeId,
         tipo = ChecklistType.fromString(tipo),
-        validadoEn = validadoEn,
-        observaciones = observaciones,
         items = items.map { item ->
             ChecklistItemDetail(
                 checklistItemId = item.checklistItemId,
+                vehiculoChecklistDocumentId = item.vehiculoChecklistDocumentId,
                 nombre = item.nombre,
                 descripcion = item.descripcion,
-                completado = item.completado,
-                seccion = item.seccion,
-                orden = item.orden
+                orden = item.orden,
+                observacion = item.observacion,
+                creadoEn = item.creadoEn,
+                actualizadoEn = item.actualizadoEn
             )
         },
-        message = message
+        creadoEn = creadoEn,
+        actualizadoEn = actualizadoEn
     )
 }
