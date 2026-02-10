@@ -73,6 +73,7 @@ class TripRepositoryImpl(
                     distancia = it.distancia
                 )
             },
+            rutaOcasional = rutaOcasional,
             conductores = conductores.map {
                 Driver(
                     id = it.id,

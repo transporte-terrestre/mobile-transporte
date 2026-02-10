@@ -80,6 +80,12 @@ kotlin {
             implementation(libs.paging3.common)
             implementation(libs.paging3.compose)
 
+            implementation(libs.peekaboo.imagePicker)
+            implementation(libs.peekaboo.ui)
+
+            implementation(libs.moko.permissions)
+            implementation(libs.moko.compose)
+
         }
 
         iosMain.dependencies {

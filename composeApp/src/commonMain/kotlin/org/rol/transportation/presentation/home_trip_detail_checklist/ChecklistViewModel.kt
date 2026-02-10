@@ -7,12 +7,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.rol.transportation.domain.model.ChecklistItemDetail
 import org.rol.transportation.domain.model.enums.ChecklistType
-import org.rol.transportation.domain.usecase.GetAllChecklistItemsUseCase
 import org.rol.transportation.domain.usecase.GetTripChecklistUseCase
-import org.rol.transportation.domain.usecase.UpsertTripChecklistUseCase
 import org.rol.transportation.utils.Resource
+
 
 class ChecklistViewModel(
     private val getTripChecklistUseCase: GetTripChecklistUseCase,
@@ -26,19 +24,27 @@ class ChecklistViewModel(
     val uiState: StateFlow<ChecklistUiState> = _uiState.asStateFlow()
 
     init {
-        loadChecklist()
+        loadChecklistData(isSilent = false)
     }
 
-    private fun loadChecklist() {
+    fun refreshData() {
+        loadChecklistData(isSilent = true)
+    }
+
+
+    private fun loadChecklistData(isSilent: Boolean) {
         viewModelScope.launch {
+            if (!isSilent) {
+                _uiState.update { it.copy(isLoading = true) }
+            }
+
             getTripChecklistUseCase(tripId, checklistType).collect { result ->
                 when (result) {
                     is Resource.Loading -> {
-                        _uiState.update { it.copy(isLoading = true) }
+                        if (!isSilent) _uiState.update { it.copy(isLoading = true) }
                     }
                     is Resource.Success -> {
                         val checklist = result.data
-
                         _uiState.update {
                             it.copy(
                                 checklistItems = checklist.items.sortedBy { item -> item.orden },
@@ -50,23 +56,10 @@ class ChecklistViewModel(
                         }
                     }
                     is Resource.Error -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                error = result.message
-                            )
-                        }
+                        _uiState.update { it.copy(isLoading = false, error = result.message) }
                     }
                 }
             }
         }
-    }
-
-    fun onItemClick(item: ChecklistItemDetail) {
-        // Aquí puedes emitir un evento o manejar la navegación
-    }
-
-    fun retry() {
-        loadChecklist()
     }
 }

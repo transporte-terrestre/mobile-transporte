@@ -4,5 +4,14 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+
+	<key>NSCameraUsageDescription</key>
+    <string>Necesitamos acceso a la cámara para tomar fotos del checklist</string>
+
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Necesitamos acceso a tus fotos para seleccionar imágenes del checklist</string>
+
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Necesitamos acceso para guardar fotos en tu galería</string>
 </dict>
 </plist>

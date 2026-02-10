@@ -6,6 +6,7 @@ data class Trip(
     val id: Int,
     val cliente: Customer,
     val ruta: Route?,
+    val rutaOcasional: String?,
     val conductores: List<Driver>,
     val vehiculos: List<Vehicle>,
     val estado: TripStatus,

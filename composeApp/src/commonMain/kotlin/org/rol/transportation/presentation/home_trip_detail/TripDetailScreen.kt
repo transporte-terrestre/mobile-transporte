@@ -3,6 +3,7 @@ package org.rol.transportation.presentation.home_trip_detail
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,7 +24,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.automirrored.filled.Segment
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Badge
@@ -81,7 +83,9 @@ import org.rol.transportation.utils.DateFormatter
 fun TripDetailScreen(
     tripId: Int,
     onNavigateBack: () -> Unit,
-    onNavigateToChecklist: (tripId: Int, tipo: String) -> Unit,
+    onNavigateToChecklist: (tripId: Int, tipo: String, vehiculoId: Int) -> Unit,
+    onNavigateToPassengers: (tripId: Int) -> Unit,
+    onNavigateToTripServices: (tripId: Int) -> Unit,
     viewModel: TripDetailViewModel = koinViewModel { parametersOf(tripId) }
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -152,7 +156,10 @@ fun TripDetailScreen(
                     TripDetailContent(trip = uiState.viaje!!,
                         hasDepartureStarted = uiState.hasDepartureStarted,
                         hasArrivalStarted = uiState.hasArrivalStarted,
-                        onNavigateToChecklist = onNavigateToChecklist)
+                        onNavigateToChecklist = onNavigateToChecklist,
+                        onNavigateToPassengers = onNavigateToPassengers,
+                        onNavigateToTripServices = onNavigateToTripServices
+                    )
                 }
             }
         }
@@ -161,10 +168,14 @@ fun TripDetailScreen(
 
 
 @Composable
-private fun TripDetailContent(trip: Trip,
-                              hasDepartureStarted: Boolean,
-                              hasArrivalStarted: Boolean,
-                              onNavigateToChecklist: (tripId: Int, tipo: String) -> Unit) {
+private fun TripDetailContent(
+    trip: Trip,
+    hasDepartureStarted: Boolean,
+    hasArrivalStarted: Boolean,
+    onNavigateToChecklist: (tripId: Int, tipo: String, vehiculoId: Int) -> Unit,
+    onNavigateToPassengers: (tripId: Int) -> Unit,
+    onNavigateToTripServices: (tripId: Int) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -262,16 +273,85 @@ private fun TripDetailContent(trip: Trip,
             }
         }
 
-        // TRIPULANTES
-        if (trip.tripulantes.isNotEmpty()) {
-            DetailSectionCard(title = "TRIPULANTES", icon = Icons.Default.Group) {
-                trip.tripulantes.forEach { miembro ->
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
-                        Icon(Icons.Default.AccountCircle, null, tint = YellowPrimary, modifier = Modifier.size(24.dp))
-                        Spacer(Modifier.width(12.dp))
-                        Text(miembro, color = MaterialTheme.colorScheme.onSurface)
-                    }
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onNavigateToPassengers(trip.id) },
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Group,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Ver Lista de Pasajeros",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onNavigateToTripServices(trip.id) },
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Segment,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Abrir Detalle de Tramos",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
 
@@ -290,9 +370,10 @@ private fun TripDetailContent(trip: Trip,
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                val vehiculoId = trip.vehiculos.firstOrNull { it.esPrincipal }?.id ?: 0
 
                 // 1. Configuración Salida
-                val bgDeparture = if (hasDepartureStarted) // Ya no usas uiState here
+                val bgDeparture = if (hasDepartureStarted)
                     TransportationTheme.myColors.bgArrival
                 else
                     TransportationTheme.myColors.bgDeparture
@@ -303,7 +384,7 @@ private fun TripDetailContent(trip: Trip,
                     TransportationTheme.myColors.textDeparture
 
                 // 2. Configuración Llegada
-                val bgArrival = if (hasArrivalStarted) // Ya no usas uiState here
+                val bgArrival = if (hasArrivalStarted)
                     TransportationTheme.myColors.bgArrival
                 else
                     TransportationTheme.myColors.bgDeparture
@@ -318,7 +399,7 @@ private fun TripDetailContent(trip: Trip,
                     icon = Icons.Rounded.AssignmentTurnedIn,
                     backgroundColor = bgDeparture,
                     contentColor = textDeparture,
-                    onClick = { onNavigateToChecklist(trip.id, ChecklistType.SALIDA.value) },
+                    onClick = { onNavigateToChecklist(trip.id, ChecklistType.SALIDA.value, vehiculoId) },
                     modifier = Modifier.weight(1f)
                 )
 
@@ -327,7 +408,7 @@ private fun TripDetailContent(trip: Trip,
                     icon = Icons.Rounded.Flag,
                     backgroundColor = bgArrival,
                     contentColor = textArrival,
-                    onClick = { onNavigateToChecklist(trip.id, ChecklistType.LLEGADA.value) },
+                    onClick = { onNavigateToChecklist(trip.id, ChecklistType.LLEGADA.value, vehiculoId) },
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -484,7 +565,6 @@ fun StatusBanner(status: TripStatus) {
 // Componente para items de Horario (Timeline)
 @Composable
 fun TimelineItem(label: String, time: String, date: String, isStart: Boolean) {
-    // Detectamos si es AM o PM desde el string de hora generado
     val isPm = time.contains("PM", ignoreCase = true)
     val timeClean = time.replace("AM", "").replace("PM", "").trim()
 

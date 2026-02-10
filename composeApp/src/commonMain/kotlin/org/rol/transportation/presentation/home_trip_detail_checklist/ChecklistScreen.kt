@@ -46,9 +46,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import org.rol.transportation.domain.model.ChecklistItemDetail
+import org.rol.transportation.domain.model.enums.ChecklistDocumentType
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,12 +59,24 @@ import org.rol.transportation.domain.model.ChecklistItemDetail
 fun ChecklistScreen(
     tripId: Int,
     tipo: String,
+    vehiculoId: Int,
     onNavigateBack: () -> Unit,
-    onItemClick: (ChecklistItemDetail) -> Unit = {},
+    onNavigateToItemDetail: (tripId: Int, checklistItemId: Int, vehiculoId: Int, itemName: String, tipo: String, vehiculoChecklistDocumentId: Int?) -> Unit,
+    onNavigateToInspectionSheet: (tripId: Int, vehiculoId: Int, tipo: String, vehiculoChecklistDocumentId: Int?) -> Unit,
+    onNavigateToDocumentInspection: (tripId: Int, vehiculoId: Int, tipo: String, vehiculoChecklistDocumentId: Int?) -> Unit,
+    onNavigateToLightsAlarm: (tripId: Int, vehiculoId: Int, tipo: String, vehiculoChecklistDocumentId: Int?) -> Unit,
+    onNavigateToSeatBelts: (tripId: Int, vehiculoId: Int, tipo: String, vehiculoChecklistDocumentId: Int?) -> Unit,
+    onNavigateToToolsInspection: (tripId: Int, vehiculoId: Int, tipo: String, vehiculoChecklistDocumentId: Int?) -> Unit,
+    onNavigateToFirstAid: (tripId: Int, vehiculoId: Int, tipo: String, vehiculoChecklistDocumentId: Int?) -> Unit,
+    onNavigateToSpillKit: (tripId: Int, vehiculoId: Int, tipo: String, vehiculoChecklistDocumentId: Int?) -> Unit,
     viewModel: ChecklistViewModel = koinViewModel { parametersOf(tripId, tipo) }
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isDark = isSystemInDarkTheme()
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.refreshData()
+    }
 
     Scaffold(
         topBar = {
@@ -140,7 +155,7 @@ fun ChecklistScreen(
                                 Text("Volver")
                             }
                             Button(
-                                onClick = { viewModel.retry() },
+                                onClick = { viewModel.refreshData() },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.primary,
                                     contentColor = MaterialTheme.colorScheme.onPrimary
@@ -175,7 +190,93 @@ fun ChecklistScreen(
                         items(items.sortedBy { it.orden }) { item ->
                             ChecklistItemCard(
                                 item = item,
-                                onClick = { onItemClick(item) }
+                                onClick = {
+                                    println("DEBUG - Item: ${item.nombre}, DocumentId: ${item.vehiculoChecklistDocumentId}, Tipo: $tipo")
+                                    val documentType = ChecklistDocumentType.fromChecklistItemId(item.checklistItemId)
+
+                                    if (documentType != null) {
+                                        when (documentType) {
+
+                                            ChecklistDocumentType.HOJA_INSPECCION -> {
+                                                onNavigateToInspectionSheet(
+                                                    tripId,
+                                                    vehiculoId,
+                                                    tipo,
+                                                    item.vehiculoChecklistDocumentId
+                                                )
+                                            }
+
+                                            ChecklistDocumentType.INSPECCION_DOCUMENTOS -> {
+                                                onNavigateToDocumentInspection(
+                                                    tripId,
+                                                    vehiculoId,
+                                                    tipo,
+                                                    item.vehiculoChecklistDocumentId
+                                                )
+                                            }
+
+                                            ChecklistDocumentType.LUCES_ALARMA -> {
+                                                onNavigateToLightsAlarm(
+                                                    tripId,
+                                                    vehiculoId,
+                                                    tipo,
+                                                    item.vehiculoChecklistDocumentId
+                                                )
+                                            }
+
+                                            ChecklistDocumentType.SEAT_BELTS -> {
+                                                onNavigateToSeatBelts(
+                                                    tripId,
+                                                    vehiculoId,
+                                                    tipo,
+                                                    item.vehiculoChecklistDocumentId
+                                                )
+                                            }
+
+                                            ChecklistDocumentType.TOOLS_INSPECTION -> {
+                                                onNavigateToToolsInspection(
+                                                    tripId,
+                                                    vehiculoId,
+                                                    tipo,
+                                                    item.vehiculoChecklistDocumentId
+                                                )
+                                            }
+
+                                            ChecklistDocumentType.FIRST_AID -> {
+                                                onNavigateToFirstAid(
+                                                    tripId,
+                                                    vehiculoId,
+                                                    tipo,
+                                                    item.vehiculoChecklistDocumentId
+                                                )
+                                            }
+
+                                            ChecklistDocumentType.SPILL_KIT -> {
+                                                onNavigateToSpillKit(
+                                                    tripId,
+                                                    vehiculoId,
+                                                    tipo,
+                                                    item.vehiculoChecklistDocumentId
+                                                )
+                                            }
+
+                                            // CASO DEFAULT: Items con foto (Item 1, 9, etc.)
+                                            else -> {
+                                                onNavigateToItemDetail(
+                                                    tripId,
+                                                    item.checklistItemId,
+                                                    vehiculoId,
+                                                    item.nombre,
+                                                    tipo,
+                                                    item.vehiculoChecklistDocumentId
+                                                )
+                                            }
+                                        }
+                                    } else {
+                                        // Fallback por si el enum no está mapeado
+                                        println("Item ${item.checklistItemId} no mapeado")
+                                    }
+                                }
                             )
                         }
 
@@ -225,6 +326,7 @@ fun ChecklistItemCard(
     item: ChecklistItemDetail,
     onClick: () -> Unit
 ) {
+    // Campo para cambiar el color del card a amarillo
     val isCompleted = item.vehiculoChecklistDocumentId != null
 
     val backgroundColor = if (isCompleted)

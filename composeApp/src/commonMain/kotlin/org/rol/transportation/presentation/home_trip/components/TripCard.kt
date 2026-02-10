@@ -48,6 +48,15 @@ fun TripCard(
 ) {
     val isDark = isSystemInDarkTheme()
 
+    val origenText = trip.ruta?.origen
+        ?: trip.rutaOcasional?.split("-")?.getOrNull(0)?.trim()
+        ?: "Origen no definido"
+
+    val destinoText = trip.ruta?.destino
+        ?: trip.rutaOcasional?.split("-")?.getOrNull(1)?.trim()
+        ?: trip.rutaOcasional?.let { "" }
+        ?: "Destino no definido"
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -85,7 +94,7 @@ fun TripCard(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        RouteStep(text = trip.ruta?.origen ?: "", isStart = true)
+                        RouteStep(text = origenText, isStart = true)
 
                         Box(
                             modifier = Modifier
@@ -94,7 +103,8 @@ fun TripCard(
                                 .height(24.dp)
                                 .background(MaterialTheme.colorScheme.outlineVariant)
                         )
-                        RouteStep(text = trip.ruta?.destino ?: "", isStart = false)
+                        RouteStep(text = destinoText, isStart = false)
+
                     }
 
                     StatusBadge(status = trip.estado)

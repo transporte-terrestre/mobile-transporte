@@ -12,6 +12,7 @@ import org.rol.transportation.domain.usecase.GetTripChecklistUseCase
 import org.rol.transportation.domain.usecase.GetTripDetailUseCase
 import org.rol.transportation.utils.Resource
 
+
 class TripDetailViewModel(
     private val getTripDetailUseCase: GetTripDetailUseCase,
     private val tripId: Int,
@@ -22,67 +23,42 @@ class TripDetailViewModel(
     val uiState: StateFlow<TripDetailUiState> = _uiState.asStateFlow()
 
     init {
-        loadTripDetail()
+        loadInitialData()
     }
 
-    private fun loadTripDetail() {
+    private fun loadInitialData() {
         viewModelScope.launch {
-            getTripDetailUseCase(tripId)
-                .collect { result ->
-                    when (result) {
-                        is Resource.Loading -> {
-                            _uiState.update { it.copy(isLoading = true, error = null) }
-                        }
-                        is Resource.Success -> {
-                            _uiState.update { it.copy(
-                                viaje = result.data,
-                                isLoading = false,
-                                error = null
-                            )}
-                        }
-                        is Resource.Error -> {
-                            _uiState.update { it.copy(
-                                isLoading = false,
-                                error = result.message
-                            )}
-                        }
-                    }
+            getTripDetailUseCase(tripId).collect { result ->
+                when (result) {
+                    is Resource.Loading -> _uiState.update { it.copy(isLoading = true, error = null) }
+                    is Resource.Success -> _uiState.update { it.copy(viaje = result.data, isLoading = false) }
+                    is Resource.Error -> _uiState.update { it.copy(isLoading = false, error = result.message) }
                 }
-            checkChecklistStatus()
-        }
-    }
-
-    private suspend fun checkChecklistStatus() {
-        getTripChecklistUseCase(tripId, ChecklistType.SALIDA).collect { result ->
-            if (result is Resource.Success) {
-                // Un item está completado si tiene vehiculoChecklistDocumentId
-                val hasStarted = result.data.items.any { it.vehiculoChecklistDocumentId != null }
-                _uiState.update { it.copy(hasDepartureStarted = hasStarted) }
             }
-        }
-
-        getTripChecklistUseCase(tripId, ChecklistType.LLEGADA).collect { result ->
-            if (result is Resource.Success) {
-                val hasStarted = result.data.items.any { it.vehiculoChecklistDocumentId != null }
-                _uiState.update { it.copy(hasArrivalStarted = hasStarted) }
-            }
+            fetchChecklistStatuses()
         }
     }
 
     fun refreshData() {
         viewModelScope.launch {
-            getTripChecklistUseCase(tripId, ChecklistType.SALIDA).collect { result ->
-                if (result is Resource.Success) {
-                    val hasStarted = result.data.items.any { it.vehiculoChecklistDocumentId != null }
-                    _uiState.update { it.copy(hasDepartureStarted = hasStarted) }
-                }
-            }
+            fetchChecklistStatuses()
+        }
+    }
 
-            getTripChecklistUseCase(tripId, ChecklistType.LLEGADA).collect { result ->
-                if (result is Resource.Success) {
-                    val hasStarted = result.data.items.any { it.vehiculoChecklistDocumentId != null }
-                    _uiState.update { it.copy(hasArrivalStarted = hasStarted) }
-                }
+    private suspend fun fetchChecklistStatuses() {
+        // Status Salida
+        getTripChecklistUseCase(tripId, ChecklistType.SALIDA).collect { result ->
+            if (result is Resource.Success) {
+                val hasStarted = result.data.items.any { it.vehiculoChecklistDocumentId != null }
+                _uiState.update { it.copy(hasDepartureStarted = hasStarted) }
+            }
+        }
+
+        // Status Llegada
+        getTripChecklistUseCase(tripId, ChecklistType.LLEGADA).collect { result ->
+            if (result is Resource.Success) {
+                val hasStarted = result.data.items.any { it.vehiculoChecklistDocumentId != null }
+                _uiState.update { it.copy(hasArrivalStarted = hasStarted) }
             }
         }
     }
