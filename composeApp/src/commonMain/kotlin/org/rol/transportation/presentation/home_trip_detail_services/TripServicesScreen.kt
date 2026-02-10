@@ -191,8 +191,10 @@ fun CreateSegmentDialog(
     onDismiss: () -> Unit,
     onConfirm: (Int, Int, String, Double, Int, String) -> Unit
 ) {
+    // Estas variables conservan los datos que vienen del backend
     var paradaPartidaId by remember(data) { mutableStateOf(data.paradaPartidaId?.toString() ?: "") }
     var paradaLlegadaId by remember(data) { mutableStateOf(data.paradaLlegadaId?.toString() ?: "") }
+
     var horaTermino by remember { mutableStateOf("") }
     var kmFinal by remember { mutableStateOf("") }
     var pasajeros by remember(data) { mutableStateOf(data.numeroPasajeros?.toString() ?: "") }
@@ -218,7 +220,7 @@ fun CreateSegmentDialog(
                         val origenTexto = data.paradaPartidaNombre ?: "ID $paradaPartidaId"
                         Text("De: $origenTexto", fontWeight = FontWeight.Bold)
 
-                        // LLEGADA (Si el backend la mandó)
+                        // LLEGADA (Visualización solamente)
                         if (data.paradaLlegadaId != null) {
                             val llegadaTexto = data.paradaLlegadaNombre ?: "ID ${data.paradaLlegadaId}"
                             Text("A: $llegadaTexto", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
@@ -233,7 +235,7 @@ fun CreateSegmentDialog(
                     }
                 }
 
-                // INPUT: ID PARTIDA (Solo si es null en la data)
+                // INPUT: ID PARTIDA (Solo se muestra si el backend NO mandó el ID)
                 if (data.paradaPartidaId == null) {
                     OutlinedTextField(
                         value = paradaPartidaId,
@@ -244,8 +246,9 @@ fun CreateSegmentDialog(
                     )
                 }
 
-                // INPUT: ID LLEGADA (Solo si es null en la data)
-                // Si el backend NO mandó ID de llegada, permitimos escribirlo.
+                // INPUT: ID LLEGADA (Solo se muestra si el backend NO mandó el ID)
+                // Si data.paradaLlegadaId ya tiene valor, este campo NO se dibuja, pero la variable 'paradaLlegadaId'
+                // ya tiene el valor correcto gracias al 'remember' del inicio.
                 if (data.paradaLlegadaId == null) {
                     OutlinedTextField(
                         value = paradaLlegadaId,
@@ -256,14 +259,7 @@ fun CreateSegmentDialog(
                     )
                 }
 
-                // Inputs
-                OutlinedTextField(
-                    value = paradaLlegadaId,
-                    onValueChange = { paradaLlegadaId = it },
-                    label = { Text("ID Parada Llegada") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
-                )
+                // --- AQUI ELIMINÉ EL TEXTFIELD DUPLICADO QUE MOSTRABA "ID Parada Llegada" SIEMPRE ---
 
                 OutlinedTextField(
                     value = horaTermino,
@@ -303,13 +299,14 @@ fun CreateSegmentDialog(
                 onClick = {
                     onConfirm(
                         paradaPartidaId.toIntOrNull() ?: 0,
-                        paradaLlegadaId.toIntOrNull() ?: 0,
+                        paradaLlegadaId.toIntOrNull() ?: 0, // Aquí se usa el valor interno oculto
                         horaTermino,
                         kmFinal.toDoubleOrNull() ?: 0.0,
                         pasajeros.toIntOrNull() ?: 0,
                         observaciones
                     )
                 },
+                // Validamos que exista un ID de partida para habilitar el botón
                 enabled = !isCreating && paradaPartidaId.isNotBlank()
             ) {
                 if (isCreating) CircularProgressIndicator(Modifier.size(24.dp), color = Color.White)

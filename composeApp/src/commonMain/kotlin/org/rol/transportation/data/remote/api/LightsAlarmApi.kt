@@ -28,11 +28,12 @@ class LightsAlarmApi(private val client: HttpClient) {
 
         return when (response.status.value) {
             200 -> response.body<LightsAlarmDto>()
-            404 -> null
+            404, 409 -> null
             else -> throw Exception("Error HTTP ${response.status.value}")
         }
     }
 
+    // ... upsert sigue igual ...
     suspend fun upsertLightsAlarm(
         vehiculoId: Int,
         viajeId: Int,

@@ -329,7 +329,10 @@ fun ChecklistItemCard(
     // Campo para cambiar el color del card a amarillo
     val isCompleted = item.vehiculoChecklistDocumentId != null
 
-    val backgroundColor = if (isCompleted)
+    val backgroundColor = MaterialTheme.colorScheme.surface
+    val borderColor = MaterialTheme.colorScheme.outlineVariant
+
+    /*val backgroundColor = if (isCompleted)
         MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
     else
         MaterialTheme.colorScheme.surface
@@ -337,7 +340,7 @@ fun ChecklistItemCard(
     val borderColor = if (isCompleted)
         MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
     else
-        MaterialTheme.colorScheme.outlineVariant
+        MaterialTheme.colorScheme.outlineVariant*/
 
     Card(
         modifier = Modifier.fillMaxWidth(),

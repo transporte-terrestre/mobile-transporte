@@ -29,7 +29,7 @@ class ChecklistDocumentApi(private val client: HttpClient) {
 
         return when (response.status.value) {
             200 -> response.body<ChecklistDocumentDto>()
-            404 -> null
+            404, 409 -> null
             else -> throw Exception("Error HTTP ${response.status.value}: ${response.status.description}")
         }
     }

@@ -30,7 +30,7 @@ class InspectionSheetApi(private val client: HttpClient) {
 
         return when (response.status.value) {
             200 -> response.body<InspectionSheetDto>()
-            404 -> null
+            404, 409 -> null
             else -> throw Exception("Error HTTP ${response.status.value}: ${response.status.description}")
         }
     }

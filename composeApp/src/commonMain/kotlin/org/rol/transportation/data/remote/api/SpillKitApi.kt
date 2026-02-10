@@ -23,7 +23,7 @@ class SpillKitApi(private val client: HttpClient) {
         }
         return when (response.status.value) {
             200 -> response.body<SpillKitDto>()
-            404 -> null
+            404, 409 -> null
             else -> throw Exception("Error HTTP ${response.status.value}")
         }
     }

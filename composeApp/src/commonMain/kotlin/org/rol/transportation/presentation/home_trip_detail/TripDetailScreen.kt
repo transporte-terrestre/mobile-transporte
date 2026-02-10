@@ -372,8 +372,14 @@ private fun TripDetailContent(
             ) {
                 val vehiculoId = trip.vehiculos.firstOrNull { it.esPrincipal }?.id ?: 0
 
+                val bgDeparture = TransportationTheme.myColors.bgDeparture
+                val textDeparture = TransportationTheme.myColors.textDeparture
+
+                val bgArrival = TransportationTheme.myColors.bgDeparture
+                val textArrival = TransportationTheme.myColors.textDeparture
+
                 // 1. Configuración Salida
-                val bgDeparture = if (hasDepartureStarted)
+                /*val bgDeparture = if (hasDepartureStarted)
                     TransportationTheme.myColors.bgArrival
                 else
                     TransportationTheme.myColors.bgDeparture
@@ -392,7 +398,7 @@ private fun TripDetailContent(
                 val textArrival = if (hasArrivalStarted)
                     TransportationTheme.myColors.textArrival
                 else
-                    TransportationTheme.myColors.textDeparture
+                    TransportationTheme.myColors.textDeparture*/
 
                 ActionButton(
                     text = "Check Salida",
