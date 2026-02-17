@@ -7,9 +7,11 @@ import org.rol.transportation.data.remote.api.AuthApi
 import org.rol.transportation.data.remote.api.ChecklistApi
 import org.rol.transportation.data.remote.api.ChecklistDocumentApi
 import org.rol.transportation.data.remote.api.DocumentInspectionApi
+import org.rol.transportation.data.remote.api.DriverApi
 import org.rol.transportation.data.remote.api.FirstAidApi
 import org.rol.transportation.data.remote.api.InspectionSheetApi
 import org.rol.transportation.data.remote.api.LightsAlarmApi
+import org.rol.transportation.data.remote.api.NotificationApi
 import org.rol.transportation.data.remote.api.PassengerApi
 import org.rol.transportation.data.remote.api.SeatBeltsApi
 import org.rol.transportation.data.remote.api.SpillKitApi
@@ -25,12 +27,16 @@ import org.rol.transportation.domain.repository.ChecklistRepository
 import org.rol.transportation.domain.repository.ChecklistRepositoryImpl
 import org.rol.transportation.domain.repository.DocumentInspectionRepository
 import org.rol.transportation.domain.repository.DocumentInspectionRepositoryImpl
+import org.rol.transportation.domain.repository.DriverRepository
+import org.rol.transportation.domain.repository.DriverRepositoryImpl
 import org.rol.transportation.domain.repository.FirstAidRepository
 import org.rol.transportation.domain.repository.FirstAidRepositoryImpl
 import org.rol.transportation.domain.repository.InspectionSheetRepository
 import org.rol.transportation.domain.repository.InspectionSheetRepositoryImpl
 import org.rol.transportation.domain.repository.LightsAlarmRepository
 import org.rol.transportation.domain.repository.LightsAlarmRepositoryImpl
+import org.rol.transportation.domain.repository.NotificationRepository
+import org.rol.transportation.domain.repository.NotificationRepositoryImpl
 import org.rol.transportation.domain.repository.PassengerRepository
 import org.rol.transportation.domain.repository.PassengerRepositoryImpl
 import org.rol.transportation.domain.repository.SeatBeltsRepository
@@ -67,6 +73,8 @@ val dataModule = module {
     single { SpillKitApi(get()) }
     single { PassengerApi(get()) }
     single { TripServicesApi(get()) }
+    single { DriverApi(get()) }
+    single { NotificationApi(get()) }
 
 
     // Repository
@@ -84,5 +92,7 @@ val dataModule = module {
     single<SpillKitRepository> { SpillKitRepositoryImpl(get()) }
     single<PassengerRepository> { PassengerRepositoryImpl(get()) }
     single<TripServicesRepository> { TripServicesRepositoryImpl(get()) }
+    single<DriverRepository> { DriverRepositoryImpl(get()) }
+    single<NotificationRepository> { NotificationRepositoryImpl(get()) }
 
 }

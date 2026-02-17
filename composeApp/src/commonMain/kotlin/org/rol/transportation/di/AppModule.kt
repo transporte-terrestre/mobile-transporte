@@ -5,10 +5,12 @@ import org.koin.dsl.module
 import org.rol.transportation.domain.usecase.CreateSegmentUseCase
 import org.rol.transportation.domain.usecase.GetChecklistDocumentUseCase
 import org.rol.transportation.domain.usecase.GetDocumentInspectionUseCase
+import org.rol.transportation.domain.usecase.GetDriverDocumentsUseCase
 import org.rol.transportation.domain.usecase.GetFirstAidUseCase
 import org.rol.transportation.domain.usecase.GetInspectionSheetUseCase
 import org.rol.transportation.domain.usecase.GetLightsAlarmUseCase
 import org.rol.transportation.domain.usecase.GetNextStepUseCase
+import org.rol.transportation.domain.usecase.GetNotificationsUseCase
 import org.rol.transportation.domain.usecase.GetPassengersUseCase
 import org.rol.transportation.domain.usecase.GetSeatBeltsUseCase
 import org.rol.transportation.domain.usecase.GetSegmentsUseCase
@@ -40,6 +42,7 @@ import org.rol.transportation.presentation.checklist_lights_alarm.LightsAlarmVie
 import org.rol.transportation.presentation.checklist_seat_belts.SeatBeltsViewModel
 import org.rol.transportation.presentation.checklist_spill_kit.SpillKitViewModel
 import org.rol.transportation.presentation.checklist_tools_inspection.ToolsInspectionViewModel
+import org.rol.transportation.presentation.driver_documents.DriverDocumentsViewModel
 import org.rol.transportation.presentation.home.HomeMenuViewModel
 import org.rol.transportation.presentation.home_trip.HomeViewModel
 import org.rol.transportation.presentation.home_trip_detail.TripDetailViewModel
@@ -47,6 +50,7 @@ import org.rol.transportation.presentation.home_trip_detail_checklist.ChecklistV
 import org.rol.transportation.presentation.home_trip_detail_passenger.PassengerViewModel
 import org.rol.transportation.presentation.home_trip_detail_services.TripServicesViewModel
 import org.rol.transportation.presentation.login.LoginViewModel
+import org.rol.transportation.presentation.notifications.NotificationsViewModel
 import org.rol.transportation.presentation.profile.ProfileViewModel
 
 
@@ -82,6 +86,8 @@ val appModule = module {
     factory { GetNextStepUseCase(get()) }
     factory { CreateSegmentUseCase(get()) }
     factory { VerifyTripChecklistUseCase(get()) }
+    factory { GetDriverDocumentsUseCase(get(), get()) }
+    factory { GetNotificationsUseCase(get(), get()) }
 
 
     // ViewModels
@@ -89,6 +95,8 @@ val appModule = module {
     viewModel { ProfileViewModel(get(), get()) }
     viewModel { HomeViewModel(get()) }
     viewModel { HomeMenuViewModel()}
+    viewModel { DriverDocumentsViewModel(get()) }
+    viewModel { NotificationsViewModel(get()) }
 
     viewModel { parameters ->
         TripDetailViewModel(

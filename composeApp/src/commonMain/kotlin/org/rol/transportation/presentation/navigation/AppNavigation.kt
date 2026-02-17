@@ -16,6 +16,7 @@ import org.rol.transportation.presentation.checklist_lights_alarm.LightsAlarmScr
 import org.rol.transportation.presentation.checklist_seat_belts.SeatBeltsScreen
 import org.rol.transportation.presentation.checklist_spill_kit.SpillKitScreen
 import org.rol.transportation.presentation.checklist_tools_inspection.ToolsInspectionScreen
+import org.rol.transportation.presentation.driver_documents.DriverDocumentsScreen
 import org.rol.transportation.presentation.home.HomeMenuScreen
 import org.rol.transportation.presentation.home_trip.HomeScreen
 import org.rol.transportation.presentation.home_trip_detail.TripDetailScreen
@@ -23,6 +24,7 @@ import org.rol.transportation.presentation.home_trip_detail_checklist.ChecklistS
 import org.rol.transportation.presentation.home_trip_detail_passenger.PassengerScreen
 import org.rol.transportation.presentation.home_trip_detail_services.TripServicesScreen
 import org.rol.transportation.presentation.login.LoginScreen
+import org.rol.transportation.presentation.notifications.NotificationsScreen
 import org.rol.transportation.presentation.profile.ProfileScreen
 import kotlin.time.Clock
 
@@ -316,6 +318,18 @@ fun AppNavigation() {
                         launchSingleTop = true
                     }
                 },
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        composable<Screen.DriverDocuments> {
+            DriverDocumentsScreen(
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        composable<Screen.Notifications> {
+            NotificationsScreen(
                 onNavigateBack = { navController.navigateUp() }
             )
         }

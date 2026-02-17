@@ -12,5 +12,7 @@ object Constants {
     const val TRIP_CHECKLIST_ENDPOINT = "viaje"
     const val VEHICULO_ENDPOINT = "vehiculo"
     const val STORAGE_ENDPOINT = "storage"
+    const val DRIVER_ENDPOINT = "conductor"
+    const val NOTIFICATION_ENDPOINT = "notificacion"
 
 }

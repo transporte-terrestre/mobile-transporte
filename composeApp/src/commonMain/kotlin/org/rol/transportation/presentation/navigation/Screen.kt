@@ -20,6 +20,12 @@ sealed class Screen {
     data object Profile : Screen()
 
     @Serializable
+    data object DriverDocuments : Screen()
+
+    @Serializable
+    data object Notifications : Screen()
+
+    @Serializable
     data class Passengers(val tripId: Int) : Screen()
 
     @Serializable

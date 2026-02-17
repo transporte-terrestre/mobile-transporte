@@ -44,15 +44,15 @@ class HomeMenuViewModel : ViewModel() {
                 id = 3,
                 title = "Documentos",
                 icon = Icons.Default.Folder,
-                route = null,
-                isEnabled = false
+                route = Screen.DriverDocuments,
+                isEnabled = true
             ),
             MenuItem(
                 id = 4,
                 title = "Alertas",
                 icon = Icons.Default.Warning,
-                route = null,
-                isEnabled = false
+                route = Screen.Notifications,
+                isEnabled = true
             ),
             MenuItem(
                 id = 5,
