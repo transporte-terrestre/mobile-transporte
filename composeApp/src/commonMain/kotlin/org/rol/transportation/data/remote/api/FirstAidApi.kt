@@ -15,7 +15,10 @@ import org.rol.transportation.utils.Constants
 
 class FirstAidApi(private val client: HttpClient) {
 
-    suspend fun getFirstAid(vehiculoId: Int, documentId: Int? = null): FirstAidDto? {
+    suspend fun getFirstAid(
+        vehiculoId: Int,
+        documentId: Int? = null
+    ): FirstAidDto? {
         val response = client.get("${Constants.VEHICULO_ENDPOINT}/$vehiculoId/checklist-document/inspeccion-botiquines/find") {
             documentId?.let { parameter("documentId", it) }
             expectSuccess = false

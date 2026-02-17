@@ -19,7 +19,7 @@ class FirstAidViewModel(
     private val vehiculoId: Int,
     private val viajeId: Int,
     private val tipo: String,
-    private val vehiculoChecklistDocumentId: Int?
+    private val safeDocumentId: Int
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -33,18 +33,14 @@ class FirstAidViewModel(
     init { loadData() }
 
     private fun loadData() {
-        val tripType = _uiState.value.viajeTipo
+        val documentId = if (safeDocumentId == -1) null else safeDocumentId
+
         viewModelScope.launch {
-            getUseCase(vehiculoId, vehiculoChecklistDocumentId).collect { result ->
+            getUseCase(vehiculoId, documentId).collect { result ->
                 when (result) {
                     is Resource.Loading -> _uiState.update { it.copy(isLoading = true, error = null) }
                     is Resource.Success -> {
-                        val data = result.data
-                        if (data.viajeTipo != null && data.viajeTipo != tripType.value) {
-                            loadEmpty()
-                        } else {
-                            _uiState.update { it.copy(inspection = data, isLoading = false) }
-                        }
+                        _uiState.update { it.copy(inspection = result.data, isLoading = false) }
                     }
                     is Resource.Error -> _uiState.update { it.copy(isLoading = false, error = result.message) }
                 }
@@ -52,13 +48,6 @@ class FirstAidViewModel(
         }
     }
 
-    private fun loadEmpty() {
-        viewModelScope.launch {
-            getUseCase(vehiculoId, null).collect { result ->
-                if (result is Resource.Success) _uiState.update { it.copy(inspection = result.data, isLoading = false) }
-            }
-        }
-    }
 
     // Actualizar Ubicación
     fun onLocationChanged(newLocation: String) {

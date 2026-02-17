@@ -15,6 +15,8 @@ data class Trip(
     val distanciaEstimada: String,
     val distanciaFinal: String?,
     val modalidadServicio: String,
-    val tripulantes: List<String>
+    val tripulantes: List<String>,
+    val checkInSalida: Boolean,
+    val checkInLlegada: Boolean
 )
 

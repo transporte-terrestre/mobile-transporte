@@ -21,15 +21,12 @@ class LightsAlarmRepositoryImpl(private val api: LightsAlarmApi) : LightsAlarmRe
         try {
             emit(Resource.Loading)
 
-            if (documentId != null) {
-                val dto = api.getLightsAlarm(vehiculoId, documentId)
-                if (dto != null) {
-                    emit(Resource.Success(dto.toDomain()))
-                } else {
-                    emit(Resource.Success(createEmptyLocal(vehiculoId)))
-                }
+            val dto = api.getLightsAlarm(vehiculoId, documentId)
+
+            if (dto != null) {
+                emit(Resource.Success(dto.toDomain()))
             } else {
-                emit(Resource.Success(createEmptyLocal(vehiculoId)))
+                emit(Resource.Error("El servidor no devolvió la estructura de luces y alarmas."))
             }
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Error al obtener luces y alarmas"))
@@ -104,39 +101,4 @@ class LightsAlarmRepositoryImpl(private val api: LightsAlarmApi) : LightsAlarmRe
         )
     }
 
-    // --- EMPTY GENERATOR (Labels copiados de tu swagger) ---
-    private fun createEmptyLocal(vehiculoId: Int): LightsAlarmInspection {
-        val items = mapOf(
-            "alarmaRetroceso" to "Alarma de Retroceso",
-            "alarmaCinturon" to "Alarma Cinturón de Seguridad",
-            "claxon" to "Claxon",
-            "lucesCabina" to "Luces de la cabina conducción",
-            "lucesSalon" to "Luces salón de pasajeros",
-            "lucesAltasDerecho" to "Luces altas (lado derecho)",
-            "lucesAltasIzquierdo" to "Luces altas (lado izquierdo)",
-            "lucesBajasDerecho" to "Luces bajas (lado derecho)",
-            "lucesBajasIzquierdo" to "Luces bajas (lado izquierdo)",
-            "lucesLateralesDerecho" to "Luces laterales (lado derecho)",
-            "lucesLateralesIzquierdo" to "Luces laterales (lado izquierdo)",
-            "lucesNeblineros" to "Luces neblineros",
-            "lucesEstacionamientoDerecho" to "Luces estacionamiento (lado derecho)",
-            "lucesEstacionamientoIzquierdo" to "Luces estacionamiento (lado izquierdo)",
-            "lucesDireccionalesDerecho" to "Luces direccionales (lado derecho)",
-            "lucesDireccionalesIzquierdo" to "Luces direccionales (lado izquierdo)",
-            "luzEstroboscopica" to "Luz estroboscopica (circulina)",
-            "luzPertiga" to "Luz de pertiga",
-            "pruebaRadio" to "Prueba de radio",
-            "botonPanico" to "Boton de panico"
-        ).mapValues { (_, label) ->
-            LightItem(label = label, estado = false, observacion = "")
-        }
-
-        return LightsAlarmInspection(
-            viajeId = null,
-            vehiculoId = vehiculoId,
-            version = null,
-            viajeTipo = null,
-            items = items
-        )
-    }
 }

@@ -22,15 +22,12 @@ class SeatBeltsRepositoryImpl(private val api: SeatBeltsApi) : SeatBeltsReposito
         try {
             emit(Resource.Loading)
 
-            if (documentId != null) {
-                val dto = api.getSeatBelts(vehiculoId, documentId)
-                if (dto != null) {
-                    emit(Resource.Success(dto.toDomain()))
-                } else {
-                    emit(Resource.Success(createEmptyLocal(vehiculoId)))
-                }
+            val dto = api.getSeatBelts(vehiculoId, documentId)
+
+            if (dto != null) {
+                emit(Resource.Success(dto.toDomain()))
             } else {
-                emit(Resource.Success(createEmptyLocal(vehiculoId)))
+                emit(Resource.Error("El servidor no devolvió la estructura de cinturones."))
             }
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Error al obtener cinturones"))
@@ -76,22 +73,4 @@ class SeatBeltsRepositoryImpl(private val api: SeatBeltsApi) : SeatBeltsReposito
         }
     }
 
-    private fun createEmptyLocal(vehiculoId: Int): SeatBeltsInspection {
-        val items = LinkedHashMap<String, SeatBeltItem>()
-
-        items["asientoPiloto"] = SeatBeltItem("Asiento Piloto", false, "")
-        items["asientoCopiloto"] = SeatBeltItem("Asiento Copiloto", false, "")
-
-        for (i in 1..52) {
-            items["asiento$i"] = SeatBeltItem("Asiento $i", false, "")
-        }
-
-        return SeatBeltsInspection(
-            viajeId = null,
-            vehiculoId = vehiculoId,
-            version = null,
-            viajeTipo = null,
-            items = items
-        )
-    }
 }

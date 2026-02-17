@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.rounded.Error
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -34,6 +35,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -78,6 +80,24 @@ fun ChecklistScreen(
         viewModel.refreshData()
     }
 
+
+    if (uiState.successMessage != null) {
+        AlertDialog(
+            onDismissRequest = {
+                viewModel.clearSuccessMessage()
+                onNavigateBack()
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.clearSuccessMessage()
+                    onNavigateBack()
+                }) { Text("OK") }
+            },
+            title = { Text("Validación Exitosa") },
+            text = { Text(uiState.successMessage ?: "") }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -96,10 +116,36 @@ fun ChecklistScreen(
                         )
                     }
                 },
+                actions = {
+                    TextButton(
+                        onClick = { viewModel.verifyChecklist() },
+                        // El botón solo se deshabilita mientras se está validando para evitar doble clics
+                        enabled = !uiState.isValidating,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary,
+                            disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                        )
+                    ) {
+                        if (uiState.isValidating) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        } else {
+                            Text(
+                                text = "Validar Datos",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = if (isDark) MaterialTheme.colorScheme.background else Color.Black,
                     titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    navigationIconContentColor = Color.White,
+                    actionIconContentColor = Color.White
                 )
             )
         },
@@ -327,20 +373,17 @@ fun ChecklistItemCard(
     onClick: () -> Unit
 ) {
     // Campo para cambiar el color del card a amarillo
-    val isCompleted = item.vehiculoChecklistDocumentId != null
+    val cardColorYellow = item.isUpdate
 
-    val backgroundColor = MaterialTheme.colorScheme.surface
-    val borderColor = MaterialTheme.colorScheme.outlineVariant
-
-    /*val backgroundColor = if (isCompleted)
+    val backgroundColor = if (cardColorYellow)
         MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
     else
         MaterialTheme.colorScheme.surface
 
-    val borderColor = if (isCompleted)
+    val borderColor = if (cardColorYellow)
         MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
     else
-        MaterialTheme.colorScheme.outlineVariant*/
+        MaterialTheme.colorScheme.outlineVariant
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -359,7 +402,7 @@ fun ChecklistItemCard(
                 Text(
                     text = item.nombre,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = if (isCompleted) FontWeight.Bold else FontWeight.SemiBold,
+                    fontWeight = if (cardColorYellow) FontWeight.Bold else FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 if (item.descripcion.isNotEmpty()) {

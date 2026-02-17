@@ -18,12 +18,12 @@ class FirstAidRepositoryImpl(private val api: FirstAidApi) : FirstAidRepository 
     override suspend fun getFirstAid(vehiculoId: Int, documentId: Int?): Flow<Resource<FirstAidInspection>> = flow {
         try {
             emit(Resource.Loading)
-            if (documentId != null) {
-                val dto = api.getFirstAid(vehiculoId, documentId)
-                if (dto != null) emit(Resource.Success(dto.toDomain()))
-                else emit(Resource.Success(createEmptyLocal(vehiculoId)))
+            val dto = api.getFirstAid(vehiculoId, documentId)
+
+            if (dto != null) {
+                emit(Resource.Success(dto.toDomain()))
             } else {
-                emit(Resource.Success(createEmptyLocal(vehiculoId)))
+                emit(Resource.Error("El servidor no devolvió la estructura del botiquín."))
             }
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Error al obtener botiquín"))
@@ -95,21 +95,4 @@ class FirstAidRepositoryImpl(private val api: FirstAidApi) : FirstAidRepository 
         )
     }
 
-    private fun createEmptyLocal(vehiculoId: Int): FirstAidInspection {
-        val labels = mapOf(
-            "alcohol" to "Alcohol de 70º 500ml", "jabonLiquido" to "Jabón líquido antiséptico 400ml",
-            "gasaEsterilizada" to "Gasa esterilizada fraccionadas 10 x 10cm",
-            "apositoEsterilizado" to "Apósito esterilizado 10x10cm",
-            "esparadrapo" to "Esparadrapo 2.5cm x 5m", "vendaElastica" to "Venda elástica 4\"x5yardas",
-            "banditasAdhesivas" to "Banditas adhesivas (curitas)", "tijeraPuntaRoma" to "Tijera punta roma 3\"",
-            "guantesQuirurgicos" to "Guantes quirúrgicos esterilizados 7 ½",
-            "algodon" to "Algodón 50 gr", "maletin" to "Maletín"
-        )
-
-        val items = labels.mapValues { (_, label) ->
-            FirstAidItem(label, false, "", "", "")
-        }
-
-        return FirstAidInspection(null, vehiculoId, null, null, "", items)
-    }
 }

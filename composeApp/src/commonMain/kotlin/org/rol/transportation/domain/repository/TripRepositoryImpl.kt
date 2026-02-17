@@ -101,7 +101,9 @@ class TripRepositoryImpl(
             distanciaEstimada = distanciaEstimada,
             distanciaFinal = distanciaFinal,
             modalidadServicio = modalidadServicio,
-            tripulantes = tripulantes
+            tripulantes = tripulantes,
+            checkInSalida = checkInSalida ?: false,
+            checkInLlegada = checkInLlegada ?: false
         )
     }
 }

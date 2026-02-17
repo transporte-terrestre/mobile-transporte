@@ -6,6 +6,15 @@ import org.rol.transportation.domain.model.seat_belts.SeatBeltsInspection
 import org.rol.transportation.utils.Resource
 
 interface SeatBeltsRepository {
-    suspend fun getSeatBelts(vehiculoId: Int, documentId: Int?): Flow<Resource<SeatBeltsInspection>>
-    suspend fun upsertSeatBelts(vehiculoId: Int, viajeId: Int, viajeTipo: TripType, inspection: SeatBeltsInspection): Flow<Resource<SeatBeltsInspection>>
+    suspend fun getSeatBelts(
+        vehiculoId: Int,
+        documentId: Int?
+    ): Flow<Resource<SeatBeltsInspection>>
+
+    suspend fun upsertSeatBelts(
+        vehiculoId: Int,
+        viajeId: Int,
+        viajeTipo: TripType,
+        inspection: SeatBeltsInspection
+    ): Flow<Resource<SeatBeltsInspection>>
 }

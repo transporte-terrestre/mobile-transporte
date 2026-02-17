@@ -11,5 +11,7 @@ data class ChecklistItemDetailDto(
     val orden: Int,
     val observacion: String? = null,
     val creadoEn: String? = null,
-    val actualizadoEn: String? = null
+    val actualizadoEn: String? = null,
+    val isUpdate: Boolean
+
 )

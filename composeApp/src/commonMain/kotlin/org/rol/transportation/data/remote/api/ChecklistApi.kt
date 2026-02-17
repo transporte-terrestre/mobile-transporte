@@ -37,4 +37,12 @@ class ChecklistApi(private val client: HttpClient) {
             setBody(request)
         }.body()
     }
+
+    suspend fun verifyTripChecklist(tripId: Int, tipo: String): TripChecklistDto {
+        return client.post("${Constants.TRIP_CHECKLIST_ENDPOINT}/$tripId/checklist/verify") {
+            parameter("tipo", tipo)
+            contentType(ContentType.Application.Json)
+            setBody(mapOf<String, String>())
+        }.body()
+    }
 }

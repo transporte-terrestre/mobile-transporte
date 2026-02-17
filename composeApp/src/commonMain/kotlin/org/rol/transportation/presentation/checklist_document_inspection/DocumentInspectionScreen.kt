@@ -74,7 +74,7 @@ fun DocumentInspectionScreen(
     vehiculoChecklistDocumentId: Int?,
     onNavigateBack: () -> Unit,
     viewModel: DocumentInspectionViewModel = koinViewModel {
-        parametersOf(vehiculoId, tripId, tipo, vehiculoChecklistDocumentId)
+        parametersOf(vehiculoId, tripId, tipo, vehiculoChecklistDocumentId?: -1)
     }
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -88,7 +88,7 @@ fun DocumentInspectionScreen(
     var currentItemLabel by remember { mutableStateOf("") }
     var currentObservationText by remember { mutableStateOf("") }
 
-    // Diálogo de Éxito
+
     if (uiState.successMessage != null) {
         AlertDialog(
             onDismissRequest = { viewModel.clearSuccessMessage(); onNavigateBack() },
@@ -102,7 +102,7 @@ fun DocumentInspectionScreen(
         )
     }
 
-    // NUEVO: Diálogo de Edición de Observación
+    // Diálogo de Edición de Observación
     if (showObservationDialog) {
         AlertDialog(
             onDismissRequest = { showObservationDialog = false },
@@ -204,7 +204,7 @@ fun DocumentInspectionContent(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        error?.let { /* Error Card ... */ }
+        error?.let {  }
 
         DocumentSectionTable(
             section = docs.document.documentosVehiculo,
@@ -267,7 +267,7 @@ fun DocumentTableRow(
     item: DocumentItem,
     isLastItem: Boolean,
     onValueChanged: (Boolean) -> Unit,
-    onEditObservation: () -> Unit // Callback para abrir diálogo
+    onEditObservation: () -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
     val colorIndicator = Color(0xFF42A5F5)

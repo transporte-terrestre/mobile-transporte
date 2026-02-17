@@ -19,7 +19,7 @@ class DocumentInspectionViewModel(
     private val vehiculoId: Int,
     private val viajeId: Int,
     private val tipo: String,
-    private val vehiculoChecklistDocumentId: Int?
+    private val safeDocumentId: Int
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -36,90 +36,22 @@ class DocumentInspectionViewModel(
     }
 
     private fun loadDocuments() {
-        val documentId = vehiculoChecklistDocumentId
-        val tripType = _uiState.value.viajeTipo
+        val documentId = if (safeDocumentId == -1) null else safeDocumentId
 
         viewModelScope.launch {
             getUseCase(vehiculoId, documentId).collect { result ->
                 when (result) {
-                    is Resource.Loading -> {
-                        _uiState.update { it.copy(isLoading = true, error = null) }
-                    }
+                    is Resource.Loading -> _uiState.update { it.copy(isLoading = true, error = null) }
                     is Resource.Success -> {
-                        val docs = result.data
-
-                        if (docs.viajeTipo != null && docs.viajeTipo != tripType.value) {
-                            loadEmptyDocuments()
-                        } else {
-                            _uiState.update {
-                                it.copy(
-                                    documentInspection = docs,
-                                    isLoading = false,
-                                    error = null,
-                                    hasChanges = false
-                                )
-                            }
+                        _uiState.update {
+                            it.copy(documentInspection = result.data, isLoading = false, error = null, hasChanges = false)
                         }
                     }
-                    is Resource.Error -> {
-                        _uiState.update { it.copy(isLoading = false, error = result.message) }
-                    }
+                    is Resource.Error -> _uiState.update { it.copy(isLoading = false, error = result.message) }
                 }
             }
         }
     }
-
-    private fun loadEmptyDocuments() {
-        viewModelScope.launch {
-            getUseCase(vehiculoId, null).collect { result ->
-                if (result is Resource.Success) {
-                    _uiState.update {
-                        it.copy(
-                            documentInspection = result.data,
-                            isLoading = false,
-                            error = null,
-                            hasChanges = false
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    /*fun onItemChanged(sectionKey: String, itemKey: String, isEnabled: Boolean) {
-        val currentDocs = _uiState.value.documentInspection ?: return
-        val currentContent = currentDocs.document
-
-        val updatedContent = when (sectionKey) {
-            "documentosVehiculo" -> {
-                val newItems = currentContent.documentosVehiculo.items.toMutableMap()
-                // Actualizamos solo el booleano 'habilitado'
-                newItems[itemKey] = newItems[itemKey]?.copy(habilitado = isEnabled)
-                    ?: return
-
-                currentContent.copy(
-                    documentosVehiculo = currentContent.documentosVehiculo.copy(items = newItems)
-                )
-            }
-            "documentosConductor" -> {
-                val newItems = currentContent.documentosConductor.items.toMutableMap()
-                newItems[itemKey] = newItems[itemKey]?.copy(habilitado = isEnabled)
-                    ?: return
-
-                currentContent.copy(
-                    documentosConductor = currentContent.documentosConductor.copy(items = newItems)
-                )
-            }
-            else -> currentContent
-        }
-
-        _uiState.update {
-            it.copy(
-                documentInspection = currentDocs.copy(document = updatedContent),
-                hasChanges = true
-            )
-        }
-    }*/
 
     fun onItemChanged(sectionKey: String, itemKey: String, isEnabled: Boolean) {
         updateItem(sectionKey, itemKey) { it.copy(habilitado = isEnabled) }

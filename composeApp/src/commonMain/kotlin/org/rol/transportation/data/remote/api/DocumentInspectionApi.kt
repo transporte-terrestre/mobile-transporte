@@ -22,9 +22,7 @@ class DocumentInspectionApi(private val client: HttpClient) {
         val response = client.get(
             "${Constants.VEHICULO_ENDPOINT}/$vehiculoId/checklist-document/inspeccion-documentos/find"
         ) {
-            documentId?.let {
-                parameter("documentId", it)
-            }
+            documentId?.let { parameter("documentId", it) }
             expectSuccess = false
         }
 

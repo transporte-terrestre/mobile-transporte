@@ -7,10 +7,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.rol.transportation.domain.model.enums.ChecklistDocumentType
 import org.rol.transportation.domain.model.enums.TripType
 import org.rol.transportation.domain.model.inspection_sheet.InspectionItem
-import org.rol.transportation.domain.model.inspection_sheet.InspectionSheet
 import org.rol.transportation.domain.usecase.GetInspectionSheetUseCase
 import org.rol.transportation.domain.usecase.UpsertInspectionSheetUseCase
 import org.rol.transportation.utils.Resource
@@ -21,7 +19,7 @@ class InspectionSheetViewModel(
     private val vehiculoId: Int,
     private val viajeId: Int,
     private val tipo: String,
-    private val vehiculoChecklistDocumentId: Int?
+    private val safeDocumentId: Int
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -37,67 +35,29 @@ class InspectionSheetViewModel(
         loadInspectionSheet()
     }
 
+
     private fun loadInspectionSheet() {
-        val documentId = vehiculoChecklistDocumentId
-        val tripType = _uiState.value.viajeTipo
+
+        val documentId = if (safeDocumentId == -1) null else safeDocumentId
 
         viewModelScope.launch {
-            // 1. Intentamos cargar la hoja con el ID que tenemos (o null si es nueva)
             getInspectionSheetUseCase(vehiculoId, documentId).collect { result ->
                 when (result) {
                     is Resource.Loading -> {
                         _uiState.update { it.copy(isLoading = true, error = null) }
                     }
                     is Resource.Success -> {
-                        val sheet = result.data
-
-                        // VALIDACIÓN CRÍTICA CORREGIDA
-                        // Si el documento tiene un tipo y NO coincide con el actual...
-                        if (sheet.viajeTipo != null && sheet.viajeTipo != tripType.value) {
-
-                            // ERROR ANTERIOR: Dejábamos hojaInspeccion = null -> Pantalla Negra
-                            // SOLUCIÓN: Si no coincide, cargamos una hoja VACÍA forzosamente.
-                            loadEmptySheet()
-
-                        } else {
-                            // Si coincide o es nueva (tipo null), la mostramos
-                            _uiState.update {
-                                it.copy(
-                                    hojaInspeccion = sheet,
-                                    isLoading = false,
-                                    error = null,
-                                    hasChanges = false
-                                )
-                            }
+                        _uiState.update {
+                            it.copy(
+                                hojaInspeccion = result.data,
+                                isLoading = false,
+                                error = null,
+                                hasChanges = false
+                            )
                         }
                     }
                     is Resource.Error -> {
-                        // Si falla la carga (ej. 404 real o sin red), también podríamos optar
-                        // por mostrar una hoja vacía para que el conductor pueda trabajar offline
-                        // o intentar de nuevo. Por ahora mostramos el error.
-                        _uiState.update {
-                            it.copy(isLoading = false, error = result.message)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Nueva función auxiliar para cargar una hoja limpia
-    private fun loadEmptySheet() {
-        viewModelScope.launch {
-            // Llamamos al caso de uso con documentId = NULL.
-            // Esto le dice al Repositorio: "Dame una hoja nueva/vacía"
-            getInspectionSheetUseCase(vehiculoId, null).collect { result ->
-                if (result is Resource.Success) {
-                    _uiState.update {
-                        it.copy(
-                            hojaInspeccion = result.data,
-                            isLoading = false,
-                            error = null,
-                            hasChanges = false
-                        )
+                        _uiState.update { it.copy(isLoading = false, error = result.message) }
                     }
                 }
             }

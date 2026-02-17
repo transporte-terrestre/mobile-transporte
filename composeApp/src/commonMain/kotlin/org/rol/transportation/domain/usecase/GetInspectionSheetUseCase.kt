@@ -9,10 +9,12 @@ import org.rol.transportation.utils.Resource
 class GetInspectionSheetUseCase (
     private val repository: InspectionSheetRepository
 ) {
-    suspend operator fun invoke(
-        vehiculoId: Int,
-        documentId: Int?
+    /*suspend operator fun invoke(
+        vehiculoId: Int
     ): Flow<Resource<InspectionSheet>> {
+        return repository.getInspectionSheet(vehiculoId)
+    }*/
+    suspend operator fun invoke(vehiculoId: Int, documentId: Int?): Flow<Resource<InspectionSheet>> {
         return repository.getInspectionSheet(vehiculoId, documentId)
     }
 }

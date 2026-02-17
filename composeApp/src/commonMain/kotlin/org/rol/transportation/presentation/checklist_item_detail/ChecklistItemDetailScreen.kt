@@ -96,7 +96,7 @@ fun ChecklistItemDetailScreen(
     vehiculoChecklistDocumentId: Int?,
     onNavigateBack: () -> Unit,
     viewModel: ChecklistItemDetailViewModel = koinViewModel {
-        parametersOf(tripId, checklistItemId, vehiculoId, tipo, vehiculoChecklistDocumentId)
+        parametersOf(tripId, checklistItemId, vehiculoId, tipo, vehiculoChecklistDocumentId ?: -1)
     }
 ) {
     val uiState by viewModel.uiState.collectAsState()

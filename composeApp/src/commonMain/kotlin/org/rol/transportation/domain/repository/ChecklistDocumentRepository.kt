@@ -10,7 +10,7 @@ interface ChecklistDocumentRepository {
     suspend fun getChecklistDocument(
         vehiculoId: Int,
         documentType: ChecklistDocumentType,
-        documentId: Int? = null
+        documentId: Int?
     ): Flow<Resource<ChecklistDocument>>
 
     suspend fun upsertChecklistDocument(

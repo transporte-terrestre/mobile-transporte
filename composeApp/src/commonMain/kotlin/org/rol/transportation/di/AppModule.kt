@@ -31,6 +31,7 @@ import org.rol.transportation.domain.usecase.UpsertSeatBeltsUseCase
 import org.rol.transportation.domain.usecase.UpsertSpillKitUseCase
 import org.rol.transportation.domain.usecase.UpsertToolsInspectionUseCase
 import org.rol.transportation.domain.usecase.ValidateEmailUseCase
+import org.rol.transportation.domain.usecase.VerifyTripChecklistUseCase
 import org.rol.transportation.presentation.checklist_document_inspection.DocumentInspectionViewModel
 import org.rol.transportation.presentation.checklist_first_aid.FirstAidViewModel
 import org.rol.transportation.presentation.checklist_inspection_sheet.InspectionSheetViewModel
@@ -39,6 +40,7 @@ import org.rol.transportation.presentation.checklist_lights_alarm.LightsAlarmVie
 import org.rol.transportation.presentation.checklist_seat_belts.SeatBeltsViewModel
 import org.rol.transportation.presentation.checklist_spill_kit.SpillKitViewModel
 import org.rol.transportation.presentation.checklist_tools_inspection.ToolsInspectionViewModel
+import org.rol.transportation.presentation.home.HomeMenuViewModel
 import org.rol.transportation.presentation.home_trip.HomeViewModel
 import org.rol.transportation.presentation.home_trip_detail.TripDetailViewModel
 import org.rol.transportation.presentation.home_trip_detail_checklist.ChecklistViewModel
@@ -79,12 +81,14 @@ val appModule = module {
     factory { GetSegmentsUseCase(get()) }
     factory { GetNextStepUseCase(get()) }
     factory { CreateSegmentUseCase(get()) }
+    factory { VerifyTripChecklistUseCase(get()) }
 
 
     // ViewModels
     viewModel { LoginViewModel(get(), get()) }
     viewModel { ProfileViewModel(get(), get()) }
     viewModel { HomeViewModel(get()) }
+    viewModel { HomeMenuViewModel()}
 
     viewModel { parameters ->
         TripDetailViewModel(
@@ -97,6 +101,7 @@ val appModule = module {
     viewModel { parameters ->
         ChecklistViewModel(
             getTripChecklistUseCase = get(),
+            getVerifyTripChecklistUseCase = get(),
             tripId = parameters.get(),
             tipo = parameters.get()
         )
@@ -119,7 +124,7 @@ val appModule = module {
             checklistItemId = parameters.get(),
             vehiculoId = parameters.get(),
             tipo = parameters.get(),
-            vehiculoChecklistDocumentId = parameters.get()
+            safeDocumentId = parameters.get()
         )
     }
 
@@ -130,7 +135,7 @@ val appModule = module {
             vehiculoId = parameters.get(),
             viajeId = parameters.get(),
             tipo = parameters.get(),
-            vehiculoChecklistDocumentId = parameters.getOrNull()
+            safeDocumentId = parameters.get()
         )
     }
 
@@ -141,7 +146,7 @@ val appModule = module {
             vehiculoId = parameters.get(),
             viajeId = parameters.get(),
             tipo = parameters.get(),
-            vehiculoChecklistDocumentId = parameters.getOrNull()
+            safeDocumentId = parameters.get()
         )
     }
 
@@ -152,7 +157,7 @@ val appModule = module {
             vehiculoId = parameters.get(),
             viajeId = parameters.get(),
             tipo = parameters.get(),
-            vehiculoChecklistDocumentId = parameters.getOrNull()
+            safeDocumentId = parameters.get()
         )
     }
 
@@ -163,7 +168,7 @@ val appModule = module {
             vehiculoId = parameters.get(),
             viajeId = parameters.get(),
             tipo = parameters.get(),
-            vehiculoChecklistDocumentId = parameters.getOrNull()
+            safeDocumentId = parameters.get()
         )
     }
 
@@ -174,7 +179,7 @@ val appModule = module {
             vehiculoId = parameters.get(),
             viajeId = parameters.get(),
             tipo = parameters.get(),
-            vehiculoChecklistDocumentId = parameters.getOrNull()
+            safeDocumentId = parameters.get()
         )
     }
 
@@ -185,7 +190,7 @@ val appModule = module {
             vehiculoId = parameters.get(),
             viajeId = parameters.get(),
             tipo = parameters.get(),
-            vehiculoChecklistDocumentId = parameters.getOrNull()
+            safeDocumentId = parameters.get()
         )
     }
 
@@ -196,7 +201,7 @@ val appModule = module {
             vehiculoId = parameters.get(),
             viajeId = parameters.get(),
             tipo = parameters.get(),
-            vehiculoChecklistDocumentId = parameters.getOrNull()
+            safeDocumentId = parameters.get()
         )
     }
 

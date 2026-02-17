@@ -1,6 +1,5 @@
 package org.rol.transportation.presentation.checklist_inspection_sheet
 
-import org.rol.transportation.domain.model.enums.ChecklistDocumentType
 import org.rol.transportation.domain.model.enums.TripType
 import org.rol.transportation.domain.model.inspection_sheet.InspectionSheet
 

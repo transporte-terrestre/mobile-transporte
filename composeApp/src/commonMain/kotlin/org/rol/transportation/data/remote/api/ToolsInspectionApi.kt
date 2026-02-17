@@ -15,7 +15,10 @@ import org.rol.transportation.utils.Constants
 
 class ToolsInspectionApi(private val client: HttpClient) {
 
-    suspend fun getTools(vehiculoId: Int, documentId: Int? = null): ToolsInspectionDto? {
+    suspend fun getTools(
+        vehiculoId: Int,
+        documentId: Int? = null
+    ): ToolsInspectionDto? {
         val response = client.get("${Constants.VEHICULO_ENDPOINT}/$vehiculoId/checklist-document/inspeccion-herramientas/find") {
             documentId?.let { parameter("documentId", it) }
             expectSuccess = false

@@ -18,9 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.Note
 import androidx.compose.material.icons.rounded.Build
-import androidx.compose.material.icons.rounded.Chair
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.AlertDialog
@@ -58,7 +56,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
-import org.rol.transportation.domain.model.seat_belts.SeatBeltItem
 import org.rol.transportation.domain.model.tools_inspection.ToolItem
 
 
@@ -70,7 +67,7 @@ fun ToolsInspectionScreen(
     tipo: String,
     vehiculoChecklistDocumentId: Int?,
     onNavigateBack: () -> Unit,
-    viewModel: ToolsInspectionViewModel = koinViewModel { parametersOf(vehiculoId, tripId, tipo, vehiculoChecklistDocumentId) }
+    viewModel: ToolsInspectionViewModel = koinViewModel { parametersOf(vehiculoId, tripId, tipo, vehiculoChecklistDocumentId ?: -1) }
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isDark = isSystemInDarkTheme()
@@ -193,7 +190,7 @@ fun ToolsInspectionScreen(
                         onToggleState = { key -> viewModel.updateItem(key) { it.copy(estado = !it.estado) } },
                         onEditDetails = { key, item ->
                             currentKey = key
-                            tempItem = item // Copia para editar en dialogo
+                            tempItem = item
                             showDetailDialog = true
                         }
                     )
@@ -245,7 +242,7 @@ fun ToolRow(
     onEdit: () -> Unit
 ) {
     val colorIndicator = Color(0xFF42A5F5)
-    // Indicador visual si hay detalles "importantes" llenos (opcional)
+
     val hasDetails = item.stock.isNotBlank() || item.observacion.isNotBlank() || item.accionCorrectiva.isNotBlank()
 
     Column {
@@ -269,7 +266,7 @@ fun ToolRow(
             // Botón de Edición (Lápiz) para abrir el diálogo completo
             IconButton(onClick = onEdit) {
                 Icon(
-                    imageVector = Icons.Rounded.Edit, // Icono de edición para indicar que hay más campos
+                    imageVector = Icons.Rounded.Edit,
                     contentDescription = "Editar Detalles",
                     tint = if (hasDetails) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary
                 )

@@ -16,7 +16,10 @@ import org.rol.transportation.utils.Constants
 
 class SpillKitApi(private val client: HttpClient) {
 
-    suspend fun getSpillKit(vehiculoId: Int, documentId: Int? = null): SpillKitDto? {
+    suspend fun getSpillKit(
+        vehiculoId: Int,
+        documentId: Int? = null
+    ): SpillKitDto? {
         val response = client.get("${Constants.VEHICULO_ENDPOINT}/$vehiculoId/checklist-document/kit-antiderrames/find") {
             documentId?.let { parameter("documentId", it) }
             expectSuccess = false

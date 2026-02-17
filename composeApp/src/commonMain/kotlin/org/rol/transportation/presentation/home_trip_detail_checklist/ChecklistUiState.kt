@@ -8,7 +8,9 @@ data class ChecklistUiState(
     val checklistItems: List<ChecklistItemDetail> = emptyList(),
     val observaciones: String = "",
     val isLoading: Boolean = false,
+    val isValidating: Boolean = false,
     val error: String? = null,
+    val successMessage: String? = null,
     val existingChecklist: TripChecklist? = null,
     val tipo: ChecklistType = ChecklistType.SALIDA
 )

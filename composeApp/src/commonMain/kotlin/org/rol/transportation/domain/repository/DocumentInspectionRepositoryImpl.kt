@@ -26,16 +26,12 @@ class DocumentInspectionRepositoryImpl(
         try {
             emit(Resource.Loading)
 
-            if (documentId != null) {
-                val dto = api.getDocumentInspection(vehiculoId, documentId)
-                if (dto != null) {
-                    emit(Resource.Success(dto.toDomain()))
-                } else {
-                    emit(Resource.Success(createEmptyDocumentInspection(vehiculoId)))
-                }
-            } else {
+            val dto = api.getDocumentInspection(vehiculoId, documentId)
 
-                emit(Resource.Success(createEmptyDocumentInspection(vehiculoId)))
+            if (dto != null) {
+                emit(Resource.Success(dto.toDomain()))
+            } else {
+                emit(Resource.Error("El servidor no devolvió la estructura de documentos."))
             }
 
         } catch (e: Exception) {
@@ -126,52 +122,4 @@ class DocumentInspectionRepositoryImpl(
         observacion = observacion ?: ""
     )
 
-    // --- GENERADOR DE VACÍOS (LOCAL) ---
-    private fun createEmptyDocumentInspection(vehiculoId: Int): DocumentInspection {
-        // Obtenemos la fecha actual para ponerla por defecto si quieres, o vacía
-        val fechaDefault = "" // O Clock.System.now()...
-
-        return DocumentInspection(
-            viajeId = null,
-            vehiculoId = vehiculoId,
-            version = null,
-            viajeTipo = null,
-            document = DocumentInspectionContent(
-                documentosVehiculo = createEmptySection("DOCUMENTOS DEL VEHICULO", listOf(
-                    "soatVigente" to "El SOAT se encuentra en la unidad y se encuentra vigente",
-                    "tarjetaPropiedad" to "La Tarjeta de Propiedad se encuentra en el vehículo",
-                    "tarjetaCirculacion" to "La Tarjeta de Circulación se encuentra en el vehículo y está vigente",
-                    "polizaVigente" to "La Póliza se encuentra en el vehículo y se encuentra vigente",
-                    "ctivVigente" to "El CTIV se encuentra en el vehículo y se encuentra vigente",
-                    "hojasMsdsVehiculo" to "Se cuenta con las Hojas MSDS de los productos químicos",
-                    "manualOperacion" to "Se cuenta con el Manual de Operación del Vehículo",
-                    "otroVehiculo" to "Otro (Vehículo)"
-                ), fechaDefault),
-                documentosConductor = createEmptySection("DOCUMENTOS DEL CONDUCTOR", listOf(
-                    "licenciaMtc" to "El Conductor cuenta con Licencia del MTC vigente",
-                    "licenciaInterna" to "El Conductor cuenta con su Licencia Interna de Manejo vigente",
-                    "checkListDiario" to "El Conductor cuenta con el Check List Diario firmado por el Supervisor de Operaciones",
-                    "iperc" to "El Conductor cuenta con el IPERC BASE y el Iperc Continúo firmado...",
-                    "pets" to "El Conductor cuenta con el PETS correspondiente de su Actividad/Tarea",
-                    "hojasMsdsConductor" to "Se cuenta con las Hojas MSDS de los productos químicos (Conductor)",
-                    "mapaRiesgos" to "Se cuenta con el mapa de riesgos - Rutas",
-                    "otroConductor" to "Otro (Conductor)"
-                ), fechaDefault)
-            )
-        )
-    }
-
-    private fun createEmptySection(label: String, items: List<Pair<String, String>>, defaultDate: String): DocumentSection {
-        return DocumentSection(
-            label = label,
-            items = items.associate { (key, label) ->
-                key to DocumentItem(
-                    label = label,
-                    habilitado = false,
-                    fechaVencimiento = defaultDate,
-                    observacion = ""
-                )
-            }
-        )
-    }
 }

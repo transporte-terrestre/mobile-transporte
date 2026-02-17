@@ -66,7 +66,7 @@ fun SeatBeltsScreen(
     vehiculoChecklistDocumentId: Int?,
     onNavigateBack: () -> Unit,
     viewModel: SeatBeltsViewModel = koinViewModel {
-        parametersOf(vehiculoId, tripId, tipo, vehiculoChecklistDocumentId)
+        parametersOf(vehiculoId, tripId, tipo, vehiculoChecklistDocumentId ?: -1)
     }
 ) {
     val uiState by viewModel.uiState.collectAsState()

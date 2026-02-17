@@ -65,7 +65,7 @@ fun FirstAidScreen(
     tipo: String,
     vehiculoChecklistDocumentId: Int?,
     onNavigateBack: () -> Unit,
-    viewModel: FirstAidViewModel = koinViewModel { parametersOf(vehiculoId, tripId, tipo, vehiculoChecklistDocumentId) }
+    viewModel: FirstAidViewModel = koinViewModel { parametersOf(vehiculoId, tripId, tipo, vehiculoChecklistDocumentId ?: -1) }
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isDark = isSystemInDarkTheme()

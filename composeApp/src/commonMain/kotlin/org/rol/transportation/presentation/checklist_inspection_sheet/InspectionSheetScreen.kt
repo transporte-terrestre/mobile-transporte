@@ -51,7 +51,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -75,15 +74,14 @@ fun InspectionSheetScreen(
     vehiculoChecklistDocumentId: Int?,
     onNavigateBack: () -> Unit,
     viewModel: InspectionSheetViewModel = koinViewModel {
-        parametersOf(vehiculoId, tripId, tipo, vehiculoChecklistDocumentId)
+        parametersOf(vehiculoId, tripId, tipo, vehiculoChecklistDocumentId?: -1)
     }
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isDark = isSystemInDarkTheme()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
-    // Diálogo de éxito
+
     if (uiState.successMessage != null) {
         AlertDialog(
             onDismissRequest = {
@@ -342,7 +340,7 @@ fun InspectionSheetContent(
             onItemValueChanged = onItemValueChanged
         )
 
-        // Espacio inferior para el botón flotante
+
         Spacer(modifier = Modifier.height(80.dp))
     }
 }
@@ -365,7 +363,7 @@ fun InspectionSectionTable(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column {
-            // Encabezado de la sección
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

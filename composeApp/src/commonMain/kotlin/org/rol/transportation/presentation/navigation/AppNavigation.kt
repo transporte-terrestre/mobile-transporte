@@ -16,6 +16,7 @@ import org.rol.transportation.presentation.checklist_lights_alarm.LightsAlarmScr
 import org.rol.transportation.presentation.checklist_seat_belts.SeatBeltsScreen
 import org.rol.transportation.presentation.checklist_spill_kit.SpillKitScreen
 import org.rol.transportation.presentation.checklist_tools_inspection.ToolsInspectionScreen
+import org.rol.transportation.presentation.home.HomeMenuScreen
 import org.rol.transportation.presentation.home_trip.HomeScreen
 import org.rol.transportation.presentation.home_trip_detail.TripDetailScreen
 import org.rol.transportation.presentation.home_trip_detail_checklist.ChecklistScreen
@@ -23,6 +24,7 @@ import org.rol.transportation.presentation.home_trip_detail_passenger.PassengerS
 import org.rol.transportation.presentation.home_trip_detail_services.TripServicesScreen
 import org.rol.transportation.presentation.login.LoginScreen
 import org.rol.transportation.presentation.profile.ProfileScreen
+import kotlin.time.Clock
 
 
 @Composable
@@ -31,10 +33,11 @@ fun AppNavigation() {
     val tokenManager: TokenManager = koinInject()
 
     val startDestination = if (tokenManager.isLoggedIn()) {
-        Screen.Home
+        Screen.HomeMenu
     } else {
         Screen.Login
     }
+
 
     NavHost(
         navController = navController,
@@ -43,10 +46,18 @@ fun AppNavigation() {
         composable<Screen.Login> {
             LoginScreen(
                 onNavigateToHome = {
-                    navController.navigate(Screen.Home) {
+                    navController.navigate(Screen.HomeMenu) {
                         popUpTo<Screen.Login> { inclusive = true }
                         launchSingleTop = true
                     }
+                }
+            )
+        }
+
+        composable<Screen.HomeMenu> {
+            HomeMenuScreen(
+                onNavigate = { screen ->
+                    navController.navigate(screen)
                 }
             )
         }
@@ -56,8 +67,8 @@ fun AppNavigation() {
                 onNavigateToTripDetail = { tripId ->
                     navController.navigate(Screen.TripDetail(tripId))
                 },
-                onNavigateToProfile = {
-                    navController.navigate(Screen.Profile)
+                onNavigateBack = {
+                    navController.navigate(Screen.HomeMenu)
                 }
             )
         }
@@ -67,6 +78,7 @@ fun AppNavigation() {
             val args = backStackEntry.toRoute<Screen.TripDetail>()
             TripDetailScreen(
                 tripId = args.tripId,
+                refreshTrigger = args.refreshKey,
                 onNavigateBack = { navController.navigateUp() },
                 onNavigateToChecklist = { tripId, tipo, vehiculoId ->
                     navController.navigate(Screen.Checklist(tripId, tipo, vehiculoId))
@@ -102,7 +114,18 @@ fun AppNavigation() {
                 tripId = args.tripId,
                 tipo = args.tipo,
                 vehiculoId = args.vehiculoId,
-                onNavigateBack = { navController.navigateUp() },
+                onNavigateBack = {
+                    navController.popBackStack()
+                    navController.navigate(
+                        Screen.TripDetail(
+                            tripId = args.tripId,
+                            refreshKey = Clock.System.now().toEpochMilliseconds()
+                        )
+                    ) {
+                        popUpTo<Screen.TripDetail> { inclusive = true }
+                    }
+                },
+                //onNavigateBack = { navController.navigateUp() },
                 onNavigateToItemDetail = { tripId, checklistItemId, vehiculoId, itemName, tipo, documentId ->
                     navController.navigate(
                         Screen.ChecklistItemDetail(

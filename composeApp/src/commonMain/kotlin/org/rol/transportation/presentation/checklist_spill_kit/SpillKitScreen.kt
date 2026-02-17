@@ -61,7 +61,7 @@ fun SpillKitScreen(
     tipo: String,
     vehiculoChecklistDocumentId: Int?,
     onNavigateBack: () -> Unit,
-    viewModel: SpillKitViewModel = koinViewModel { parametersOf(vehiculoId, tripId, tipo, vehiculoChecklistDocumentId) }
+    viewModel: SpillKitViewModel = koinViewModel { parametersOf(vehiculoId, tripId, tipo, vehiculoChecklistDocumentId ?: -1) }
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isDark = isSystemInDarkTheme()

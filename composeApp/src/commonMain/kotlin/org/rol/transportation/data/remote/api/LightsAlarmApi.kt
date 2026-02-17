@@ -33,7 +33,6 @@ class LightsAlarmApi(private val client: HttpClient) {
         }
     }
 
-    // ... upsert sigue igual ...
     suspend fun upsertLightsAlarm(
         vehiculoId: Int,
         viajeId: Int,

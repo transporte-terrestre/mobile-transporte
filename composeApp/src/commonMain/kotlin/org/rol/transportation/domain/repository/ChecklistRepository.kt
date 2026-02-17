@@ -16,4 +16,6 @@ interface ChecklistRepository {
         items: List<Pair<Int, Boolean>>,
         observaciones: String?
     ): Flow<Resource<TripChecklist>>
+
+    suspend fun verifyTripChecklist(tripId: Int, tipo: ChecklistType): Flow<Resource<TripChecklist>>
 }

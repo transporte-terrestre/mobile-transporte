@@ -13,6 +13,7 @@ import org.rol.transportation.domain.model.enums.TripType
 import org.rol.transportation.domain.usecase.GetChecklistDocumentUseCase
 import org.rol.transportation.domain.usecase.UploadImageUseCase
 import org.rol.transportation.domain.usecase.UpsertChecklistDocumentUseCase
+import org.rol.transportation.utils.ImageCompressor
 import org.rol.transportation.utils.Resource
 import kotlin.time.Clock
 
@@ -24,14 +25,13 @@ class ChecklistItemDetailViewModel(
     private val checklistItemId: Int,
     private val vehiculoId: Int,
     private val tipo: String,
-    private val vehiculoChecklistDocumentId: Int?
+    private val safeDocumentId: Int
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChecklistItemDetailUiState(
         checklistItemId = checklistItemId,
         viajeId = tripId,
         vehiculoId = vehiculoId,
-        vehiculoChecklistDocumentId = vehiculoChecklistDocumentId,
         viajeTipo = TripType.fromString(tipo) ?: TripType.SALIDA,
     ))
     val uiState: StateFlow<ChecklistItemDetailUiState> = _uiState.asStateFlow()
@@ -52,22 +52,7 @@ class ChecklistItemDetailViewModel(
 
     private fun loadDocument() {
         val documentType = _uiState.value.documentType ?: return
-        val documentId = _uiState.value.vehiculoChecklistDocumentId
-        val tripType = _uiState.value.viajeTipo
-
-        // SOLO cargar el documento si existe un documentId Y coincide con el tipo actual
-        if (documentId == null) {
-            // No hay documento guardado, mostrar pantalla vacía
-            _uiState.update {
-                it.copy(
-                    currentPhotoUrl = null,
-                    isLoading = false,
-                    error = null,
-                    hasChanges = false
-                )
-            }
-            return
-        }
+        val documentId = if (safeDocumentId == -1) null else safeDocumentId
 
         viewModelScope.launch {
             getChecklistDocumentUseCase(vehiculoId, documentType, documentId).collect { result ->
@@ -78,22 +63,7 @@ class ChecklistItemDetailViewModel(
                     is Resource.Success -> {
                         val document = result.data
 
-                        // VALIDAR: Solo mostrar si el tipo coincide
-                        if (document.viajeTipo != tripType.value) {
-                            // El documento no es del tipo correcto, mostrar vacío
-                            _uiState.update {
-                                it.copy(
-                                    currentPhotoUrl = null,
-                                    isLoading = false,
-                                    error = null,
-                                    hasChanges = false
-                                )
-                            }
-                            return@collect
-                        }
-
-
-                        val photoUrl = result.data.document.photo.url.takeIf { it.isNotBlank() }
+                        val photoUrl = document.document.photo.url.takeIf { it.isNotBlank() }
                         initialPhotoUrl = photoUrl
 
                         _uiState.update {
@@ -120,34 +90,38 @@ class ChecklistItemDetailViewModel(
         }
     }
 
-    // Esta función se llama cuando Peekaboo retorna la imagen
+
     fun onImageSelected(imageBytes: ByteArray) {
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+
             try {
-                // Validar tamaño (max 5MB)
-                if (imageBytes.size > 5 * 1024 * 1024) {
-                    _uiState.update {
-                        it.copy(error = "La imagen es demasiado grande (máximo 5MB)")
-                    }
+                // Reduce la imagen drásticamente antes de validarla o guardarla
+                val compressedBytes = ImageCompressor.compress(imageBytes)
+
+                // Validación de seguridad (ahora sobre el tamaño comprimido)
+                if (compressedBytes.size > 5 * 1024 * 1024) {
+                    _uiState.update { it.copy(error = "Imagen demasiado grande", isLoading = false) }
                     return@launch
                 }
 
-                val imageBitmap = imageBytes.toImageBitmap()
+                val imageBitmap = compressedBytes.toImageBitmap()
+
                 _uiState.update {
                     it.copy(
                         capturedImageBitmap = imageBitmap,
-                        capturedImageBytes = imageBytes,
+                        capturedImageBytes = compressedBytes,
                         error = null,
-                        hasChanges = true
+                        hasChanges = true,
+                        isLoading = false
                     )
                 }
             } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(error = "Error al procesar la imagen: ${e.message}")
-                }
+                _uiState.update { it.copy(error = "Error: ${e.message}", isLoading = false) }
             }
         }
     }
+
 
     fun onImageSelectionError(error: Throwable) {
         _uiState.update {

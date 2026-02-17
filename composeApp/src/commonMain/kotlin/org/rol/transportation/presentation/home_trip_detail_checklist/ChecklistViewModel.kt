@@ -9,11 +9,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.rol.transportation.domain.model.enums.ChecklistType
 import org.rol.transportation.domain.usecase.GetTripChecklistUseCase
+import org.rol.transportation.domain.usecase.VerifyTripChecklistUseCase
 import org.rol.transportation.utils.Resource
 
 
 class ChecklistViewModel(
     private val getTripChecklistUseCase: GetTripChecklistUseCase,
+    private val getVerifyTripChecklistUseCase: VerifyTripChecklistUseCase,
     private val tripId: Int,
     tipo: String
 ) : ViewModel() {
@@ -61,5 +63,39 @@ class ChecklistViewModel(
                 }
             }
         }
+    }
+
+
+    fun verifyChecklist() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isValidating = true, error = null) }
+
+            getVerifyTripChecklistUseCase(tripId, checklistType).collect { result ->
+                when (result) {
+                    is Resource.Loading -> { }
+                    is Resource.Success -> {
+                        val checklist = result.data
+                        _uiState.update {
+                            it.copy(
+                                checklistItems = checklist.items.sortedBy { item -> item.orden },
+                                existingChecklist = checklist,
+                                isValidating = false,
+                                successMessage = "Checklist validado correctamente"
+                            )
+                        }
+
+                    }
+                    is Resource.Error -> {
+                        _uiState.update {
+                            it.copy(isValidating = false, error = result.message)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun clearSuccessMessage() {
+        _uiState.update { it.copy(successMessage = null) }
     }
 }

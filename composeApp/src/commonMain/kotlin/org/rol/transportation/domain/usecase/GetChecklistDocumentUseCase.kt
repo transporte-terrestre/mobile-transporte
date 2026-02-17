@@ -12,7 +12,7 @@ class GetChecklistDocumentUseCase(
     suspend operator fun invoke(
         vehiculoId: Int,
         documentType: ChecklistDocumentType,
-        documentId: Int? = null
+        documentId: Int?
     ): Flow<Resource<ChecklistDocument>> {
         return repository.getChecklistDocument(vehiculoId, documentType, documentId)
     }

@@ -8,7 +8,6 @@ data class ChecklistItemDetailUiState(
     val checklistItemId: Int = 0,
     val vehiculoId: Int = 0,
     val viajeId: Int = 0,
-    val vehiculoChecklistDocumentId: Int? = null,
     val viajeTipo: TripType = TripType.SALIDA,
     val documentType: ChecklistDocumentType? = null,
     val capturedImageBitmap: ImageBitmap? = null,

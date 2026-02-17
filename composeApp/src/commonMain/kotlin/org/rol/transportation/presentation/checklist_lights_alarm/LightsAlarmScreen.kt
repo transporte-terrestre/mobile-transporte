@@ -72,7 +72,7 @@ fun LightsAlarmScreen(
     vehiculoChecklistDocumentId: Int?,
     onNavigateBack: () -> Unit,
     viewModel: LightsAlarmViewModel = koinViewModel {
-        parametersOf(vehiculoId, tripId, tipo, vehiculoChecklistDocumentId)
+        parametersOf(vehiculoId, tripId, tipo, vehiculoChecklistDocumentId ?: -1)
     }
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -85,7 +85,7 @@ fun LightsAlarmScreen(
     var currentItemLabel by remember { mutableStateOf("") }
     var currentObservationText by remember { mutableStateOf("") }
 
-    // Diálogo de Éxito
+
     if (uiState.successMessage != null) {
         AlertDialog(
             onDismissRequest = { viewModel.clearMessages(); onNavigateBack() },
@@ -267,7 +267,7 @@ fun LightsTableRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onValueChanged(!isChecked) } // Clic en toda la fila cambia el check
+                .clickable { onValueChanged(!isChecked) }
                 .padding(horizontal = 8.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -297,7 +297,7 @@ fun LightsTableRow(
             )
         }
 
-        // Opcional: Mostrar un pequeño texto debajo si hay observación (para feedback visual rápido)
+
         if (hasObservation) {
             Text(
                 text = "Obs: $observation",

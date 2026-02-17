@@ -7,7 +7,6 @@ import org.rol.transportation.data.remote.dto.inspection_sheet.InspectionItemDto
 import org.rol.transportation.data.remote.dto.inspection_sheet.InspectionSectionDto
 import org.rol.transportation.data.remote.dto.inspection_sheet.InspectionSheetDto
 import org.rol.transportation.data.remote.dto.inspection_sheet.UpsertInspectionSheetRequest
-import org.rol.transportation.domain.model.enums.ChecklistDocumentType
 import org.rol.transportation.domain.model.enums.TripType
 import org.rol.transportation.domain.model.inspection_sheet.InspectionItem
 import org.rol.transportation.domain.model.inspection_sheet.InspectionSection
@@ -25,17 +24,13 @@ class InspectionSheetRepositoryImpl (
     ): Flow<Resource<InspectionSheet>> = flow {
         try {
             emit(Resource.Loading)
-            if (documentId != null) {
-                val hojaDto = inspectionSheetApi.getInspectionSheet(vehiculoId, documentId)
+            val hojaDto = inspectionSheetApi.getInspectionSheet(vehiculoId, documentId)
 
-                if (hojaDto != null) {
-                    emit(Resource.Success(hojaDto.toDomain()))
-                } else {
-                    // Si por alguna razón el ID existe pero no devuelve data (404), damos una vacía
-                    emit(Resource.Success(createEmptyInspectionSheet(vehiculoId)))
-                }
+            if (hojaDto != null) {
+                emit(Resource.Success(hojaDto.toDomain()))
             } else {
-                emit(Resource.Success(createEmptyInspectionSheet(vehiculoId)))
+
+                emit(Resource.Error("El servidor no devolvió la estructura de inspección."))
             }
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Error al obtener la hoja de inspección"))
@@ -164,7 +159,7 @@ class InspectionSheetRepositoryImpl (
     )
 
 
-    private fun createEmptyInspectionSheet(vehiculoId: Int): InspectionSheet {
+    /*private fun createEmptyInspectionSheet(vehiculoId: Int): InspectionSheet {
         return InspectionSheet(
             viajeId = null,
             vehiculoId = vehiculoId,
@@ -267,5 +262,5 @@ class InspectionSheetRepositoryImpl (
                 )
             }
         )
-    }
+    }*/
 }

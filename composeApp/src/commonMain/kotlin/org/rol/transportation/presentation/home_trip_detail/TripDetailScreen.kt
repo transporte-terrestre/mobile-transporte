@@ -52,6 +52,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -64,8 +65,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import coil3.compose.AsyncImage
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -82,6 +81,7 @@ import org.rol.transportation.utils.DateFormatter
 @Composable
 fun TripDetailScreen(
     tripId: Int,
+    refreshTrigger: Long = 0L,
     onNavigateBack: () -> Unit,
     onNavigateToChecklist: (tripId: Int, tipo: String, vehiculoId: Int) -> Unit,
     onNavigateToPassengers: (tripId: Int) -> Unit,
@@ -91,7 +91,15 @@ fun TripDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val isDark = isSystemInDarkTheme()
 
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+    // refrescar cuando cambia refreshTrigger
+    LaunchedEffect(refreshTrigger) {
+        if (refreshTrigger > 0) {
+            viewModel.refreshData()
+        }
+    }
+
+    // lifecycle para la primera carga
+    LaunchedEffect(Unit) {
         viewModel.refreshData()
     }
 
@@ -154,8 +162,6 @@ fun TripDetailScreen(
 
                 uiState.viaje != null -> {
                     TripDetailContent(trip = uiState.viaje!!,
-                        hasDepartureStarted = uiState.hasDepartureStarted,
-                        hasArrivalStarted = uiState.hasArrivalStarted,
                         onNavigateToChecklist = onNavigateToChecklist,
                         onNavigateToPassengers = onNavigateToPassengers,
                         onNavigateToTripServices = onNavigateToTripServices
@@ -170,8 +176,6 @@ fun TripDetailScreen(
 @Composable
 private fun TripDetailContent(
     trip: Trip,
-    hasDepartureStarted: Boolean,
-    hasArrivalStarted: Boolean,
     onNavigateToChecklist: (tripId: Int, tipo: String, vehiculoId: Int) -> Unit,
     onNavigateToPassengers: (tripId: Int) -> Unit,
     onNavigateToTripServices: (tripId: Int) -> Unit
@@ -372,39 +376,33 @@ private fun TripDetailContent(
             ) {
                 val vehiculoId = trip.vehiculos.firstOrNull { it.esPrincipal }?.id ?: 0
 
-                val bgDeparture = TransportationTheme.myColors.bgDeparture
-                val textDeparture = TransportationTheme.myColors.textDeparture
-
-                val bgArrival = TransportationTheme.myColors.bgDeparture
-                val textArrival = TransportationTheme.myColors.textDeparture
-
-                // 1. Configuración Salida
-                /*val bgDeparture = if (hasDepartureStarted)
+                val bgDepartureButton = if (trip.checkInSalida)
                     TransportationTheme.myColors.bgArrival
                 else
                     TransportationTheme.myColors.bgDeparture
 
-                val textDeparture = if (hasDepartureStarted)
+                val textDepartureButton = if (trip.checkInSalida)
                     TransportationTheme.myColors.textArrival
                 else
                     TransportationTheme.myColors.textDeparture
 
-                // 2. Configuración Llegada
-                val bgArrival = if (hasArrivalStarted)
+                // Si checkInLlegada es TRUE -> Verde
+                // Si checkInLlegada es FALSE -> Azul
+                val bgArrivalButton = if (trip.checkInLlegada)
                     TransportationTheme.myColors.bgArrival
                 else
                     TransportationTheme.myColors.bgDeparture
 
-                val textArrival = if (hasArrivalStarted)
+                val textArrivalButton = if (trip.checkInLlegada)
                     TransportationTheme.myColors.textArrival
                 else
-                    TransportationTheme.myColors.textDeparture*/
+                    TransportationTheme.myColors.textDeparture
 
                 ActionButton(
                     text = "Check Salida",
                     icon = Icons.Rounded.AssignmentTurnedIn,
-                    backgroundColor = bgDeparture,
-                    contentColor = textDeparture,
+                    backgroundColor = bgDepartureButton,
+                    contentColor = textDepartureButton,
                     onClick = { onNavigateToChecklist(trip.id, ChecklistType.SALIDA.value, vehiculoId) },
                     modifier = Modifier.weight(1f)
                 )
@@ -412,8 +410,8 @@ private fun TripDetailContent(
                 ActionButton(
                     text = "Check Llegada",
                     icon = Icons.Rounded.Flag,
-                    backgroundColor = bgArrival,
-                    contentColor = textArrival,
+                    backgroundColor = bgArrivalButton,
+                    contentColor = textArrivalButton,
                     onClick = { onNavigateToChecklist(trip.id, ChecklistType.LLEGADA.value, vehiculoId) },
                     modifier = Modifier.weight(1f)
                 )

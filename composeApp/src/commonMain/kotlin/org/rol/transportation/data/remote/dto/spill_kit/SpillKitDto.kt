@@ -5,9 +5,9 @@ import kotlinx.serialization.json.JsonObject
 
 @Serializable
 data class SpillKitDto(
-    val viajeId: Int,
+    val viajeId: Int? = null,
     val vehiculoId: Int,
-    val version: String?,
-    val viajeTipo: String?,
+    val version: String? = null,
+    val viajeTipo: String? = null,
     val document: JsonObject // Trae items Y un String "ubicacion" mezclados
 )

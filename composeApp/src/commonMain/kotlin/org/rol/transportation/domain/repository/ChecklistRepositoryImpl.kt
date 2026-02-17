@@ -84,6 +84,22 @@ class ChecklistRepositoryImpl(
         }
     }
 
+
+    override suspend fun verifyTripChecklist(
+        tripId: Int,
+        tipo: ChecklistType
+    ): Flow<Resource<TripChecklist>> = flow {
+        try {
+            emit(Resource.Loading)
+            val checklist = checklistApi.verifyTripChecklist(tripId, tipo.value)
+            emit(Resource.Success(checklist.toDomain()))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emit(Resource.Error(e.message ?: "Error desconocido"))
+        }
+    }
+
+
     private fun ChecklistItemDto.toDomain() = ChecklistItem(
         id = id,
         nombre = nombre,
@@ -107,7 +123,8 @@ class ChecklistRepositoryImpl(
                 orden = item.orden,
                 observacion = item.observacion,
                 creadoEn = item.creadoEn,
-                actualizadoEn = item.actualizadoEn
+                actualizadoEn = item.actualizadoEn,
+                isUpdate = item.isUpdate
             )
         },
         creadoEn = creadoEn,

@@ -8,5 +8,6 @@ data class ChecklistItemDetail(
     val orden: Int,
     val observacion: String?,
     val creadoEn: String?,
-    val actualizadoEn: String?
+    val actualizadoEn: String?,
+    val isUpdate: Boolean
 )

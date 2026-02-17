@@ -8,10 +8,13 @@ sealed class Screen {
     data object Login : Screen()
 
     @Serializable
+    data object HomeMenu : Screen()
+
+    @Serializable
     data object Home : Screen()
 
     @Serializable
-    data class TripDetail(val tripId: Int) : Screen()
+    data class TripDetail(val tripId: Int, val refreshKey: Long = 0L) : Screen()
 
     @Serializable
     data object Profile : Screen()

@@ -21,9 +21,7 @@ class ChecklistDocumentApi(private val client: HttpClient) {
         documentId: Int? = null
     ): ChecklistDocumentDto? {
         val response = client.get("${Constants.VEHICULO_ENDPOINT}/$vehiculoId/checklist-document/$documentType/find") {
-            documentId?.let {
-                parameter("documentId", it)
-            }
+            documentId?.let { parameter("documentId", it) }
             expectSuccess = false
         }
 
