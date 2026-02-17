@@ -25,7 +25,7 @@ data class TripDto (
     val ruta: RouteDto? = null,
     val conductores: List<DriverDto> = emptyList(),
     val vehiculos: List<VehicleDto> = emptyList(),
-    val comentarios: List<String> = emptyList(),
+    val comentarios: List<CommentDto> = emptyList(),
     val checkInSalida: Boolean? = false,
     val checkInLlegada: Boolean? = false
 )
