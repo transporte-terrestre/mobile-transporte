@@ -231,7 +231,7 @@ fun NotificationItem(notification: Notification) {
     }
 }
 
-// Función auxiliar simple para formatear la fecha ISO
+// Función auxiliar simple para formatear fecha ISO
 fun formatDateTime(isoString: String): String {
     return try {
         // Formato simple: "2024-02-17T14:05:27.686Z" -> "17/02/2024 14:05"
