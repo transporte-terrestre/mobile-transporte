@@ -1,6 +1,6 @@
 package org.rol.transportation.presentation.driver_documents
 
-import org.rol.transportation.domain.model.DriverDocument
+import org.rol.transportation.domain.model.driver_documents.DriverDocument
 
 data class DriverDocumentsUiState(
     val isLoading: Boolean = false,

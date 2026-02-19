@@ -17,6 +17,7 @@ import org.rol.transportation.presentation.checklist_seat_belts.SeatBeltsScreen
 import org.rol.transportation.presentation.checklist_spill_kit.SpillKitScreen
 import org.rol.transportation.presentation.checklist_tools_inspection.ToolsInspectionScreen
 import org.rol.transportation.presentation.driver_documents.DriverDocumentsScreen
+import org.rol.transportation.presentation.driver_documents_pdfs.PdfViewerScreen
 import org.rol.transportation.presentation.home.HomeMenuScreen
 import org.rol.transportation.presentation.home_trip.HomeScreen
 import org.rol.transportation.presentation.home_trip_detail.TripDetailScreen
@@ -324,12 +325,24 @@ fun AppNavigation() {
 
         composable<Screen.DriverDocuments> {
             DriverDocumentsScreen(
-                onNavigateBack = { navController.navigateUp() }
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToPdf = { url, title ->
+                    navController.navigate(Screen.PdfViewer(url = url, title = title))
+                }
             )
         }
 
         composable<Screen.Notifications> {
             NotificationsScreen(
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        composable<Screen.PdfViewer> { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.PdfViewer>()
+            PdfViewerScreen(
+                url = args.url,
+                title = args.title,
                 onNavigateBack = { navController.navigateUp() }
             )
         }

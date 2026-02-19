@@ -24,7 +24,7 @@ coil = "3.0.4"
 paging3 = "3.4.0"
 peekaboo = "0.5.2"
 moko = "0.18.0"
-
+pdfmp = "1.0.9"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -86,6 +86,9 @@ peekaboo-Ui = { module = "io.github.onseok:peekaboo-ui", version.ref = "peekaboo
 # Moko
 moko-permissions = { module = "dev.icerock.moko:permissions", version.ref = "moko" }
 moko-compose = { module = "dev.icerock.moko:permissions-compose", version.ref = "moko"}
+
+# PDFMP
+pdfmp-compose = { module = "com.dshatz.pdfmp:pdfmp-compose", version.ref = "pdfmp" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

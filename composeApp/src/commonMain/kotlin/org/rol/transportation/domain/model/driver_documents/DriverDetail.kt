@@ -1,4 +1,4 @@
-package org.rol.transportation.domain.model
+package org.rol.transportation.domain.model.driver_documents
 
 data class DriverDetail(
     val id: Int,
@@ -10,13 +10,4 @@ data class DriverDetail(
     val celular: String?,
     val numeroLicencia: String,
     val documentos: List<DriverDocument>
-)
-
-data class DriverDocument(
-    val id: Int,
-    val tipo: String,
-    val nombre: String,
-    val url: String,
-    val fechaExpiracion: String?,
-    val fechaEmision: String?
 )

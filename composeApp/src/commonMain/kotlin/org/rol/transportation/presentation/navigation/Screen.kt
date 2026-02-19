@@ -104,5 +104,6 @@ sealed class Screen {
         val vehiculoChecklistDocumentId: Int? = null
     ) : Screen()
 
-
+    @Serializable
+    data class PdfViewer(val url: String, val title: String) : Screen()
 }

@@ -24,7 +24,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,12 +41,13 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.koin.compose.viewmodel.koinViewModel
-import org.rol.transportation.domain.model.DriverDocument
+import org.rol.transportation.domain.model.driver_documents.DriverDocument
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DriverDocumentsScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToPdf: (url: String, title: String) -> Unit,
     viewModel: DriverDocumentsViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -97,7 +97,12 @@ fun DriverDocumentsScreen(
                             document = document,
                             onClick = {
                                 if (document.url.isNotEmpty()) {
-                                    uriHandler.openUri(document.url)
+                                    // PDFs van al viewer, otros archivos abren en browser
+                                    if (document.url.endsWith(".pdf", ignoreCase = true)) {
+                                        onNavigateToPdf(document.url, document.nombre)
+                                    } else {
+                                        uriHandler.openUri(document.url)
+                                    }
                                 }
                             }
                         )

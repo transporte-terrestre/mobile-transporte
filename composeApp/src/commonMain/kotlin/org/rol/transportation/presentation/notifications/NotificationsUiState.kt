@@ -1,6 +1,6 @@
 package org.rol.transportation.presentation.notifications
 
-import org.rol.transportation.domain.model.Notification
+import org.rol.transportation.domain.model.notification.Notification
 
 data class NotificationsUiState(
     val isLoading: Boolean = false,

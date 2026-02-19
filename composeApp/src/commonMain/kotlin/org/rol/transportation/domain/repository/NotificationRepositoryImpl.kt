@@ -1,9 +1,9 @@
 package org.rol.transportation.domain.repository
 
 import org.rol.transportation.data.remote.api.NotificationApi
-import org.rol.transportation.domain.model.Notification
-import org.rol.transportation.domain.model.NotificationMeta
-import org.rol.transportation.domain.model.NotificationPage
+import org.rol.transportation.domain.model.notification.Notification
+import org.rol.transportation.domain.model.notification.NotificationMeta
+import org.rol.transportation.domain.model.notification.NotificationPage
 
 class NotificationRepositoryImpl(private val api: NotificationApi) : NotificationRepository {
     override suspend fun getNotifications(conductorId: Int, page: Int, limit: Int): NotificationPage {

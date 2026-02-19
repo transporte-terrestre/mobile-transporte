@@ -47,7 +47,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.koin.compose.viewmodel.koinViewModel
-import org.rol.transportation.domain.model.Notification
+import org.rol.transportation.domain.model.notification.Notification
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

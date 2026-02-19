@@ -2,11 +2,6 @@ package org.rol.transportation.data.remote.dto.notification
 
 import kotlinx.serialization.Serializable
 
-@Serializable
-data class NotificationResponse(
-    val data: List<NotificationDto>,
-    val meta: NotificationMetaDto
-)
 
 @Serializable
 data class NotificationDto(
@@ -18,12 +13,4 @@ data class NotificationDto(
     val leido: Boolean
 )
 
-@Serializable
-data class NotificationMetaDto(
-    val total: Int,
-    val page: Int,
-    val limit: Int,
-    val totalPages: Int,
-    val hasNextPage: Boolean,
-    val hasPreviousPage: Boolean
-)
+

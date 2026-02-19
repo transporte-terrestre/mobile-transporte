@@ -5,7 +5,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import org.rol.transportation.data.remote.dto.driver.DriverDetailResponse
+import org.rol.transportation.data.remote.dto.driver_document.DriverDetailResponse
 import org.rol.transportation.utils.Constants
 
 class DriverApi(private val client: HttpClient) {

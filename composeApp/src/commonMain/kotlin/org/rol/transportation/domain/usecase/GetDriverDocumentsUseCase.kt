@@ -7,5 +7,5 @@ class GetDriverDocumentsUseCase(
     private val driverRepository: DriverRepository,
     private val tokenManager: TokenManager
 ) {
-    suspend operator fun invoke() = driverRepository.getDriverById(tokenManager.getUserId()!!)
+    suspend operator fun invoke() = driverRepository.getDriverWithDocuments(tokenManager.getUserId()!!)
 }

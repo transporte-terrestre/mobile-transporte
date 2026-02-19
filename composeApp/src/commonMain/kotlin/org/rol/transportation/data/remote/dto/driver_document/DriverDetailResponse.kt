@@ -1,4 +1,4 @@
-package org.rol.transportation.data.remote.dto.driver
+package org.rol.transportation.data.remote.dto.driver_document
 
 import kotlinx.serialization.Serializable
 
@@ -21,17 +21,4 @@ data class DriverDetailResponse(
     val actualizadoEn: String? = null,
     val eliminadoEn: String? = null,
     val documentos: Map<String, List<DocumentDto>> = emptyMap()
-)
-
-@Serializable
-data class DocumentDto(
-    val id: Int,
-    val conductorId: Int,
-    val tipo: String,
-    val nombre: String,
-    val url: String,
-    val fechaExpiracion: String? = null,
-    val fechaEmision: String? = null,
-    val creadoEn: String? = null,
-    val actualizadoEn: String? = null
 )

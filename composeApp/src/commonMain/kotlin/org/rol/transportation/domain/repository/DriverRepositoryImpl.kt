@@ -1,11 +1,11 @@
 package org.rol.transportation.domain.repository
 
 import org.rol.transportation.data.remote.api.DriverApi
-import org.rol.transportation.domain.model.DriverDetail
-import org.rol.transportation.domain.model.DriverDocument
+import org.rol.transportation.domain.model.driver_documents.DriverDetail
+import org.rol.transportation.domain.model.driver_documents.DriverDocument
 
 class DriverRepositoryImpl(private val api: DriverApi) : DriverRepository {
-    override suspend fun getDriverById(id: Int): DriverDetail {
+    override suspend fun getDriverWithDocuments(id: Int): DriverDetail {
         val response = api.getDriverById(id)
         
         val allDocuments = response.documentos.values.flatten().map { doc ->

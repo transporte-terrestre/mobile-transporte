@@ -86,6 +86,8 @@ kotlin {
             implementation(libs.moko.permissions)
             implementation(libs.moko.compose)
 
+            implementation(libs.pdfmp.compose)
+
         }
 
         iosMain.dependencies {
