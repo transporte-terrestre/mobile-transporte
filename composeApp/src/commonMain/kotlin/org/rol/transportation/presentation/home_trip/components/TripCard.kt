@@ -20,6 +20,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -43,103 +45,49 @@ import org.rol.transportation.utils.DateFormatter
 @Composable
 fun TripCard(
     trip: Trip,
-    onClick: () -> Unit,
+    onClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isDark = isSystemInDarkTheme()
 
-    val origenText = trip.ruta?.origen
-        ?: trip.rutaOcasional?.split("-")?.getOrNull(0)?.trim()
-        ?: "Origen no definido"
-
-    val destinoText = trip.ruta?.destino
-        ?: trip.rutaOcasional?.split("-")?.getOrNull(1)?.trim()
-        ?: trip.rutaOcasional?.let { "" }
-        ?: "Destino no definido"
-
     Card(
         modifier = modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
         border = if (!isDark) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-
+        Column {
+            // Header
             Box(
                 modifier = Modifier
-                    .fillMaxHeight()
-                    .width(6.dp)
-                    .background(
-                        color = YellowPrimary,
-                        shape = RoundedCornerShape(topStart = 20.dp, bottomStart = 20.dp)
-                    )
-            )
-
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
-                ) {
-
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(2.dp)
-                    ) {
-                        RouteStep(text = origenText, isStart = true)
-
-                        Box(
-                            modifier = Modifier
-                                .padding(start = 7.dp)
-                                .width(2.dp)
-                                .height(24.dp)
-                                .background(MaterialTheme.colorScheme.outlineVariant)
-                        )
-                        RouteStep(text = destinoText, isStart = false)
-
-                    }
-
-                    StatusBadge(status = trip.estado)
-                }
-
-                Spacer(Modifier.width(12.dp))
-
                 Text(
-                    text = "Cliente: ${trip.cliente.nombreCompleto}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    text = "# Viaje Múltiple ${trip.id}",
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Black
                 )
+            }
 
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 4.dp),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                )
+            // Contenido: Segments
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // IDA
+                TripSegmentRow(segment = trip.ida, isStart = true, onClick = { onClick(trip.ida.id) })
 
-                // Fecha
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.CalendarToday,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = DateFormatter.formatDate(trip.fechaSalida),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                // VUELTA (Opcional)
+                trip.vuelta?.let { vuelta ->
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    TripSegmentRow(segment = vuelta, isStart = false, onClick = { onClick(vuelta.id) })
                 }
             }
         }
@@ -147,25 +95,156 @@ fun TripCard(
 }
 
 @Composable
-fun RouteStep(text: String, isStart: Boolean) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(16.dp)
-                .background(
-                    if (isStart) Color(0xFFFBC02D) else Color.Gray.copy(alpha = 0.5f),
-                    CircleShape
+fun TripSegmentRow(segment: org.rol.transportation.domain.model.TripSegment, isStart: Boolean, onClick: () -> Unit) {
+    val origenText = segment.ruta?.origen
+        ?: segment.rutaOcasional?.split("-")?.getOrNull(0)?.trim()
+        ?: "Origen indefinido"
+
+    val destinoText = segment.ruta?.destino
+        ?: segment.rutaOcasional?.split("-")?.getOrNull(1)?.trim()
+        ?: segment.rutaOcasional?.let { "" }
+        ?: "Destino indefinido"
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Etiqueta IDA/VUELTA
+                Surface(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = RoundedCornerShape(4.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (isStart) "→" else "←",
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = if (isStart) "IDA" else "VUELTA",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+
+                Spacer(Modifier.width(8.dp))
+
+                // Hora y Fecha
+                Icon(
+                    imageVector = Icons.Default.Schedule,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-        )
-        Spacer(Modifier.width(12.dp))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = if (isStart) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
-        )
+                Spacer(Modifier.width(4.dp))
+                
+                val dateStr = if (segment.fechaSalida.isNotEmpty()) {
+                    val time = DateFormatter.formatOnlyTime(segment.fechaSalida).replace(" AM", "").replace(" PM", "")
+                    "$time - ${DateFormatter.formatOnlyDate(segment.fechaSalida)}"
+                } else {
+                    "Fecha sin asignar"
+                }
+
+                Text(
+                    text = dateStr,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            StatusBadge(status = segment.estado)
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Origen -> Destino -> Ver Boton
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                Text(
+                    text = origenText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f, fill = false),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = "→",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = destinoText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f, fill = false),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.width(8.dp))
+                
+                // Botón VER
+                androidx.compose.material3.Button(
+                    onClick = onClick,
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+                    modifier = Modifier.height(26.dp),
+                    shape = RoundedCornerShape(6.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text("VER", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
+                }
+            }
+
+            Spacer(Modifier.width(8.dp))
+
+            // Placa (Tag Gris)
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.5f),
+                shape = RoundedCornerShape(4.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DirectionsCar,
+                        contentDescription = null,
+                        modifier = Modifier.size(12.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = segment.vehiculoPrincipal?.placa ?: "SIN PLACA",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
     }
 }
+
+
 
 
 @Composable

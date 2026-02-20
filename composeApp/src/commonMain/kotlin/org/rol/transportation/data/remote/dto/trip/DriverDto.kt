@@ -4,19 +4,19 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class DriverDto(
     val id: Int,
-    val dni: String,
-    val nombres: String,
-    val apellidos: String,
+    val dni: String? = null,
+    val nombres: String? = null,
+    val apellidos: String? = null,
     val nombreCompleto: String,
     val email: String? = null,
     val celular: String? = null,
-    val numeroLicencia: String,
-    val claseLicencia: String,
-    val categoriaLicencia: String,
+    val numeroLicencia: String? = null,
+    val claseLicencia: String? = null,
+    val categoriaLicencia: String? = null,
     val fotocheck: List<String> = emptyList(),
-    val creadoEn: String,
-    val actualizadoEn: String,
+    val creadoEn: String? = null,
+    val actualizadoEn: String? = null,
     val eliminadoEn: String? = null,
-    val rol: String,
-    val esPrincipal: Boolean
+    val rol: String? = null,
+    val esPrincipal: Boolean = false
 )

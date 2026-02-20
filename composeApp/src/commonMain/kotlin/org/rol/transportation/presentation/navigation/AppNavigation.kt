@@ -65,6 +65,17 @@ fun AppNavigation() {
             )
         }
 
+        composable<Screen.ChecklistTrips> {
+            org.rol.transportation.presentation.checklist_trips.ChecklistTripsScreen(
+                onNavigateBack = {
+                    navController.navigateUp()
+                },
+                onNavigateToChecklist = { tripId, tipo, vehiculoId ->
+                    navController.navigate(Screen.Checklist(tripId, tipo, vehiculoId))
+                }
+            )
+        }
+
         composable<Screen.Home> {
             HomeScreen(
                 onNavigateToTripDetail = { tripId ->

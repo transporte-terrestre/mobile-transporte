@@ -1,9 +1,13 @@
-package org.rol.transportation.presentation.home_trip
+package org.rol.transportation.presentation.checklist_trips
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,18 +15,25 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.rounded.AssignmentTurnedIn
+import androidx.compose.material.icons.rounded.Flag
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -39,15 +50,17 @@ import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import org.koin.compose.viewmodel.koinViewModel
-import org.rol.transportation.presentation.home_trip.components.TripCard
-
+import org.rol.transportation.domain.model.TripLight
+import org.rol.transportation.domain.model.TripLightSegment
+import org.rol.transportation.domain.model.enums.ChecklistType
+import org.rol.transportation.presentation.theme.TransportationTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
-    onNavigateToTripDetail: (Int) -> Unit,
+fun ChecklistTripsScreen(
     onNavigateBack: () -> Unit,
-    viewModel: HomeViewModel = koinViewModel()
+    onNavigateToChecklist: (tripId: Int, tipo: String, vehiculoId: Int) -> Unit,
+    viewModel: ChecklistTripsViewModel = koinViewModel()
 ) {
     val tripsPagingItems = viewModel.tripsPagingFlow.collectAsLazyPagingItems()
 
@@ -58,12 +71,12 @@ fun HomeScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Viajes",
+                            text = "Checklists",
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleLarge
                         )
                         Text(
-                            text = "Lista de rutas asignadas",
+                            text = "Seleccione un checklist a completar",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.White.copy(alpha = 0.7f)
                         )
@@ -106,9 +119,7 @@ fun HomeScreen(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                         }
                     }
 
@@ -130,7 +141,7 @@ fun HomeScreen(
                                     tint = MaterialTheme.colorScheme.error
                                 )
                                 Text(
-                                    text = "Error al cargar viajes",
+                                    text = "Error al cargar los viajes",
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.error
                                 )
@@ -153,15 +164,12 @@ fun HomeScreen(
                         }
                     }
 
-                    // Estado: Sin viajes
                     tripsPagingItems.itemCount == 0 -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(
                                     imageVector = Icons.Default.DirectionsCar,
                                     contentDescription = null,
@@ -170,7 +178,7 @@ fun HomeScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = "No hay viajes asignados",
+                                    text = "No hay viajes disponibles",
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -178,10 +186,9 @@ fun HomeScreen(
                         }
                     }
 
-                    // Estado: Mostrar lista
                     else -> {
                         LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
                             contentPadding = PaddingValues(bottom = 20.dp)
                         ) {
                             items(
@@ -190,14 +197,15 @@ fun HomeScreen(
                             ) { index ->
                                 val trip = tripsPagingItems[index]
                                 if (trip != null) {
-                                    TripCard(
+                                    TripLightCard(
                                         trip = trip,
-                                        onClick = { segmentId -> onNavigateToTripDetail(segmentId) }
+                                        onNavigateToChecklist = { segmentId, tipo ->
+                                            onNavigateToChecklist(segmentId, tipo, 0) // El vehiculoId puede ser 0
+                                        }
                                     )
                                 }
                             }
 
-                            // Indicador de carga al final (scroll infinito)
                             item {
                                 when (tripsPagingItems.loadState.append) {
                                     is LoadState.Loading -> {
@@ -213,7 +221,6 @@ fun HomeScreen(
                                             )
                                         }
                                     }
-
                                     is LoadState.Error -> {
                                         Box(
                                             modifier = Modifier
@@ -226,7 +233,6 @@ fun HomeScreen(
                                             }
                                         }
                                     }
-
                                     else -> {}
                                 }
                             }
@@ -238,3 +244,168 @@ fun HomeScreen(
     }
 }
 
+@Composable
+fun TripLightCard(
+    trip: TripLight,
+    onNavigateToChecklist: (segmentId: Int, tipo: String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isDark = isSystemInDarkTheme()
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = if (!isDark) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
+            ) {
+                Text(
+                    text = "# Viaje Múltiple ${trip.id}",
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Black
+                )
+            }
+
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                TripLightSegmentRow(segment = trip.ida, isStart = true, onNavigateToChecklist = onNavigateToChecklist)
+
+                trip.vuelta?.let { vuelta ->
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    TripLightSegmentRow(segment = vuelta, isStart = false, onNavigateToChecklist = onNavigateToChecklist)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TripLightSegmentRow(
+    segment: TripLightSegment,
+    isStart: Boolean,
+    onNavigateToChecklist: (segmentId: Int, tipo: String) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = RoundedCornerShape(4.dp),
+                color = if (isStart) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary,
+                modifier = Modifier.padding(end = 8.dp)
+            ) {
+                Text(
+                    text = if (isStart) "IDA" else "VUELTA",
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontWeight = FontWeight.Black
+                )
+            }
+            Text(
+                text = segment.rutaNombre,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val bgDepartureButton = if (segment.checkInSalida)
+                TransportationTheme.myColors.bgArrival
+            else
+                TransportationTheme.myColors.bgDeparture
+
+            val textDepartureButton = if (segment.checkInSalida)
+                TransportationTheme.myColors.textArrival
+            else
+                TransportationTheme.myColors.textDeparture
+
+            val bgArrivalButton = if (segment.checkInLlegada)
+                TransportationTheme.myColors.bgArrival
+            else
+                TransportationTheme.myColors.bgDeparture
+
+            val textArrivalButton = if (segment.checkInLlegada)
+                TransportationTheme.myColors.textArrival
+            else
+                TransportationTheme.myColors.textDeparture
+
+            ActionButtonLight(
+                text = "Check Salida",
+                icon = Icons.Rounded.AssignmentTurnedIn,
+                backgroundColor = bgDepartureButton,
+                contentColor = textDepartureButton,
+                onClick = { onNavigateToChecklist(segment.id, ChecklistType.SALIDA.value) },
+                modifier = Modifier.weight(1f)
+            )
+
+            ActionButtonLight(
+                text = "Check Llegada",
+                icon = Icons.Rounded.Flag,
+                backgroundColor = bgArrivalButton,
+                contentColor = textArrivalButton,
+                onClick = { onNavigateToChecklist(segment.id, ChecklistType.LLEGADA.value) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+fun ActionButtonLight(
+    text: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    backgroundColor: Color,
+    contentColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.height(60.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = backgroundColor
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(vertical = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = contentColor,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}

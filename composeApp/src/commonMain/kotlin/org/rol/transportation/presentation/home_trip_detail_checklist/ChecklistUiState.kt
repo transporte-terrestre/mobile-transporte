@@ -12,5 +12,6 @@ data class ChecklistUiState(
     val error: String? = null,
     val successMessage: String? = null,
     val existingChecklist: TripChecklist? = null,
-    val tipo: ChecklistType = ChecklistType.SALIDA
+    val tipo: ChecklistType = ChecklistType.SALIDA,
+    val vehiculoId: Int = 0
 )

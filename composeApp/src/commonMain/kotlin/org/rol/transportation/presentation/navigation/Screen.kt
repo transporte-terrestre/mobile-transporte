@@ -11,6 +11,9 @@ sealed class Screen {
     data object HomeMenu : Screen()
 
     @Serializable
+    data object ChecklistTrips : Screen()
+
+    @Serializable
     data object Home : Screen()
 
     @Serializable

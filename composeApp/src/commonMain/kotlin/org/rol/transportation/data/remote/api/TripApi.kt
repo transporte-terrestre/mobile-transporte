@@ -6,6 +6,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import org.rol.transportation.data.remote.dto.trip.TripDto
 import org.rol.transportation.data.remote.dto.trip.TripListResponse
+import org.rol.transportation.data.remote.dto.trip.TripSegmentDto
 import org.rol.transportation.utils.Constants
 
 class TripApi(private val client: HttpClient) {
@@ -22,7 +23,17 @@ class TripApi(private val client: HttpClient) {
         }.body()
     }
 
-    suspend fun getTripById(id: Int): TripDto {
+    suspend fun getLightTrips(
+        page: Int = 1,
+        limit: Int = 10
+    ): org.rol.transportation.data.remote.dto.trip.TripLightListResponse {
+        return client.get(Constants.TRIP_LIGHT_ENDPOINT) {
+            parameter("page", page)
+            parameter("limit", limit)
+        }.body()
+    }
+
+    suspend fun getTripById(id: Int): TripSegmentDto {
         return client.get("${Constants.TRIP_DETAIL_ENDPOINT}/$id")
             .body()
     }

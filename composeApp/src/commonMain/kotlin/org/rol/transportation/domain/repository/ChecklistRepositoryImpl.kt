@@ -95,7 +95,12 @@ class ChecklistRepositoryImpl(
             emit(Resource.Success(checklist.toDomain()))
         } catch (e: Exception) {
             e.printStackTrace()
-            emit(Resource.Error(e.message ?: "Error desconocido"))
+            val msg = e.message ?: ""
+            if (msg.contains("JsonConvertException") || msg.contains("required for type")) {
+                emit(Resource.Error("El servidor rechazó la validación (Error 500 interno). Intente nuevamente más tarde."))
+            } else {
+                emit(Resource.Error(e.message ?: "Error desconocido"))
+            }
         }
     }
 

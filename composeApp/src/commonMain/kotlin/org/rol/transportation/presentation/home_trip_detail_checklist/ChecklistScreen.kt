@@ -71,7 +71,7 @@ fun ChecklistScreen(
     onNavigateToToolsInspection: (tripId: Int, vehiculoId: Int, tipo: String, vehiculoChecklistDocumentId: Int?) -> Unit,
     onNavigateToFirstAid: (tripId: Int, vehiculoId: Int, tipo: String, vehiculoChecklistDocumentId: Int?) -> Unit,
     onNavigateToSpillKit: (tripId: Int, vehiculoId: Int, tipo: String, vehiculoChecklistDocumentId: Int?) -> Unit,
-    viewModel: ChecklistViewModel = koinViewModel { parametersOf(tripId, tipo) }
+    viewModel: ChecklistViewModel = koinViewModel { parametersOf(tripId, tipo, vehiculoId) }
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isDark = isSystemInDarkTheme()
@@ -246,7 +246,7 @@ fun ChecklistScreen(
                                             ChecklistDocumentType.HOJA_INSPECCION -> {
                                                 onNavigateToInspectionSheet(
                                                     tripId,
-                                                    vehiculoId,
+                                                    uiState.vehiculoId,
                                                     tipo,
                                                     item.vehiculoChecklistDocumentId
                                                 )
@@ -255,7 +255,7 @@ fun ChecklistScreen(
                                             ChecklistDocumentType.INSPECCION_DOCUMENTOS -> {
                                                 onNavigateToDocumentInspection(
                                                     tripId,
-                                                    vehiculoId,
+                                                    uiState.vehiculoId,
                                                     tipo,
                                                     item.vehiculoChecklistDocumentId
                                                 )
@@ -264,7 +264,7 @@ fun ChecklistScreen(
                                             ChecklistDocumentType.LUCES_ALARMA -> {
                                                 onNavigateToLightsAlarm(
                                                     tripId,
-                                                    vehiculoId,
+                                                    uiState.vehiculoId,
                                                     tipo,
                                                     item.vehiculoChecklistDocumentId
                                                 )
@@ -273,7 +273,7 @@ fun ChecklistScreen(
                                             ChecklistDocumentType.SEAT_BELTS -> {
                                                 onNavigateToSeatBelts(
                                                     tripId,
-                                                    vehiculoId,
+                                                    uiState.vehiculoId,
                                                     tipo,
                                                     item.vehiculoChecklistDocumentId
                                                 )
@@ -282,7 +282,7 @@ fun ChecklistScreen(
                                             ChecklistDocumentType.TOOLS_INSPECTION -> {
                                                 onNavigateToToolsInspection(
                                                     tripId,
-                                                    vehiculoId,
+                                                    uiState.vehiculoId,
                                                     tipo,
                                                     item.vehiculoChecklistDocumentId
                                                 )
@@ -291,7 +291,7 @@ fun ChecklistScreen(
                                             ChecklistDocumentType.FIRST_AID -> {
                                                 onNavigateToFirstAid(
                                                     tripId,
-                                                    vehiculoId,
+                                                    uiState.vehiculoId,
                                                     tipo,
                                                     item.vehiculoChecklistDocumentId
                                                 )
@@ -300,7 +300,7 @@ fun ChecklistScreen(
                                             ChecklistDocumentType.SPILL_KIT -> {
                                                 onNavigateToSpillKit(
                                                     tripId,
-                                                    vehiculoId,
+                                                    uiState.vehiculoId,
                                                     tipo,
                                                     item.vehiculoChecklistDocumentId
                                                 )
@@ -311,7 +311,7 @@ fun ChecklistScreen(
                                                 onNavigateToItemDetail(
                                                     tripId,
                                                     item.checklistItemId,
-                                                    vehiculoId,
+                                                    uiState.vehiculoId,
                                                     item.nombre,
                                                     tipo,
                                                     item.vehiculoChecklistDocumentId

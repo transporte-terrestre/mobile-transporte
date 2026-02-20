@@ -180,6 +180,8 @@ private fun TripDetailContent(
     onNavigateToPassengers: (tripId: Int) -> Unit,
     onNavigateToTripServices: (tripId: Int) -> Unit
 ) {
+    val segment = trip.ida // Temporalmente mostraremos IDA siempre
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -187,22 +189,36 @@ private fun TripDetailContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        StatusBanner(trip.estado)
+        StatusBanner(segment.estado)
 
-        // CLIENTE: Ahora con header gris y datos verticales
-        DetailSectionCard(title = "CLIENTE", icon = Icons.Default.Person) {
-            UserInfoVertical(
-                name = trip.cliente.nombreCompleto,
-                imageUrl = trip.cliente.imagenes.firstOrNull(),
-                label1 = "EMAIL",
-                value1 = trip.cliente.email ?: "N/A",
-                label2 = "TELÉFONO",
-                value2 = trip.cliente.telefono ?: "N/A"
-            )
+        // CLIENTE
+        segment.cliente?.let { cliente ->
+            DetailSectionCard(title = "CLIENTE", icon = Icons.Default.Person) {
+                val hasRuc = !cliente.ruc.isNullOrBlank()
+                if (hasRuc) {
+                    UserInfoVertical(
+                        name = cliente.razonSocial ?: cliente.nombreCompleto,
+                        imageUrl = cliente.imagenes.firstOrNull(),
+                        label1 = "RUC",
+                        value1 = cliente.ruc ?: "N/A",
+                        label2 = "DIRECCIÓN",
+                        value2 = cliente.direccion ?: "N/A"
+                    )
+                } else {
+                    UserInfoVertical(
+                        name = cliente.nombreCompleto,
+                        imageUrl = cliente.imagenes.firstOrNull(),
+                        label1 = "EMAIL",
+                        value1 = cliente.email ?: "N/A",
+                        label2 = "TELÉFONO",
+                        value2 = cliente.telefono ?: "N/A"
+                    )
+                }
+            }
         }
 
-        // CONDUCTOR: Ahora con header gris
-        val conductor = trip.conductores.firstOrNull { it.esPrincipal }
+        // CONDUCTOR
+        val conductor = segment.conductorPrincipal
         DetailSectionCard(title = "CONDUCTOR", icon = Icons.Default.Badge, badge = "Principal") {
             UserInfoVertical(
                 name = conductor?.nombreCompleto ?: "N/A",
@@ -210,34 +226,34 @@ private fun TripDetailContent(
                 label1 = "LICENCIA",
                 value1 = conductor?.numeroLicencia ?: "N/A",
                 label2 = "ROL",
-                value2 = conductor?.rol?.uppercase() ?: "N/A"
+                value2 = conductor?.rol?.uppercase() ?: "CONDUCTOR"
             )
         }
 
-        // RUTA: Mantiene su estructura dinámica
-        trip.ruta?.let { ruta ->
+        // RUTA
+        segment.ruta?.let { ruta ->
             DetailSectionCard(title = "RUTA", icon = Icons.Default.GpsFixed) {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text("Origen", style = MaterialTheme.typography.labelSmall, color = GrayText)
                         Text(ruta.origen, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                        Text("${ruta.origenLat}, ${ruta.origenLng}", style = MaterialTheme.typography.bodySmall, color = GrayText)
+                        Text("${ruta.origenLat},\n${ruta.origenLng}", style = MaterialTheme.typography.bodySmall, color = GrayText)
                     }
                     Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = YellowPrimary, modifier = Modifier.align(Alignment.CenterVertically).padding(horizontal = 8.dp))
                     Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
                         Text("Destino", style = MaterialTheme.typography.labelSmall, color = GrayText)
-                        Text(ruta.destino, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                        Text("${ruta.destinoLat}, ${ruta.destinoLng}", style = MaterialTheme.typography.bodySmall, color = GrayText)
+                        Text(ruta.destino, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, textAlign = TextAlign.End)
+                        Text("${ruta.destinoLat},\n${ruta.destinoLng}", style = MaterialTheme.typography.bodySmall, color = GrayText, textAlign = TextAlign.End)
                     }
                 }
                 HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
                 Text("Distancia Estimada", style = MaterialTheme.typography.labelSmall, color = GrayText)
-                Text("${trip.distanciaEstimada} km", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+                Text("${segment.distanciaEstimada ?: "0.0"} km", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
             }
         }
 
         // VEHÍCULO
-        val vehiculo = trip.vehiculos.firstOrNull { it.esPrincipal }
+        val vehiculo = segment.vehiculoPrincipal
         vehiculo?.let { v ->
             DetailSectionCard(title = "VEHÍCULO", icon = Icons.Default.DirectionsCar) {
                 v.imagenes.firstOrNull()?.let { imageUrl ->
@@ -259,19 +275,18 @@ private fun TripDetailContent(
             }
         }
 
-        // CRONOGRAMA
         DetailSectionCard(title = "CRONOGRAMA", icon = Icons.Default.Schedule) {
             TimelineItem(
                 label = "SALIDA ESTIMADA",
-                time = DateFormatter.formatOnlyTime(trip.fechaSalida),
-                date = DateFormatter.formatOnlyDate(trip.fechaSalida),
+                time = if (segment.fechaSalida.isNotEmpty()) DateFormatter.formatOnlyTime(segment.fechaSalida) else "--:--",
+                date = if (segment.fechaSalida.isNotEmpty()) DateFormatter.formatOnlyDate(segment.fechaSalida) else "Sin Fecha",
                 isStart = true
             )
-            trip.fechaLlegada?.let { llegada ->
+            segment.fechaLlegada?.let { llegada ->
                 TimelineItem(
                     label = "LLEGADA REAL",
-                    time = DateFormatter.formatOnlyTime(llegada),
-                    date = DateFormatter.formatOnlyDate(llegada),
+                    time = if (llegada.isNotEmpty()) DateFormatter.formatOnlyTime(llegada) else "--:--",
+                    date = if (llegada.isNotEmpty()) DateFormatter.formatOnlyDate(llegada) else "Sin Fecha",
                     isStart = false
                 )
             }
@@ -374,26 +389,24 @@ private fun TripDetailContent(
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                val vehiculoId = trip.vehiculos.firstOrNull { it.esPrincipal }?.id ?: 0
+                val vehiculoId = segment.vehiculoPrincipal?.id ?: 0
 
-                val bgDepartureButton = if (trip.checkInSalida)
+                val bgDepartureButton = if (segment.checkInSalida)
                     TransportationTheme.myColors.bgArrival
                 else
                     TransportationTheme.myColors.bgDeparture
 
-                val textDepartureButton = if (trip.checkInSalida)
+                val textDepartureButton = if (segment.checkInSalida)
                     TransportationTheme.myColors.textArrival
                 else
                     TransportationTheme.myColors.textDeparture
 
-                // Si checkInLlegada es TRUE -> Verde
-                // Si checkInLlegada es FALSE -> Azul
-                val bgArrivalButton = if (trip.checkInLlegada)
+                val bgArrivalButton = if (segment.checkInLlegada)
                     TransportationTheme.myColors.bgArrival
                 else
                     TransportationTheme.myColors.bgDeparture
 
-                val textArrivalButton = if (trip.checkInLlegada)
+                val textArrivalButton = if (segment.checkInLlegada)
                     TransportationTheme.myColors.textArrival
                 else
                     TransportationTheme.myColors.textDeparture

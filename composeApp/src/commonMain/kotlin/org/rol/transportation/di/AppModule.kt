@@ -61,6 +61,7 @@ val appModule = module {
     factory { IsLoggedInUseCase(get()) }
     factory { ValidateEmailUseCase() }
     factory { GetTripsPagedUseCase(get()) }
+    factory { org.rol.transportation.domain.usecase.GetLightTripsPagedUseCase(get()) }
     factory { GetTripDetailUseCase(get()) }
     factory { GetTripChecklistUseCase(get()) }
     factory { GetChecklistDocumentUseCase(get()) }
@@ -94,6 +95,7 @@ val appModule = module {
     viewModel { LoginViewModel(get(), get()) }
     viewModel { ProfileViewModel(get(), get()) }
     viewModel { HomeViewModel(get()) }
+    viewModel { org.rol.transportation.presentation.checklist_trips.ChecklistTripsViewModel(get()) }
     viewModel { HomeMenuViewModel()}
     viewModel { DriverDocumentsViewModel(get()) }
     viewModel { NotificationsViewModel(get()) }
@@ -110,8 +112,10 @@ val appModule = module {
         ChecklistViewModel(
             getTripChecklistUseCase = get(),
             getVerifyTripChecklistUseCase = get(),
+            getTripDetailUseCase = get(),
             tripId = parameters.get(),
-            tipo = parameters.get()
+            tipo = parameters.get(),
+            vehiculoIdParam = parameters.get()
         )
     }
 

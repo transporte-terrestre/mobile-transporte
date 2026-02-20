@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class CustomerDto (
     val id: Int,
-    val tipoDocumento: String,
+    val tipoDocumento: String? = null,
     val dni: String? = null,
     val ruc: String? = null,
     val nombres: String? = null,
@@ -14,9 +14,9 @@ data class CustomerDto (
     val email: String? = null,
     val telefono: String? = null,
     val direccion: String? = null,
-    val horasContrato: String,
+    val horasContrato: String? = null,
     val imagenes: List<String> = emptyList(),
-    val creadoEn: String,
-    val actualizadoEn: String,
+    val creadoEn: String? = null,
+    val actualizadoEn: String? = null,
     val eliminadoEn: String? = null
 )

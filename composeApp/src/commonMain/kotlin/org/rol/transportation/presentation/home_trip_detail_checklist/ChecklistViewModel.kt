@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.rol.transportation.domain.model.enums.ChecklistType
 import org.rol.transportation.domain.usecase.GetTripChecklistUseCase
+import org.rol.transportation.domain.usecase.GetTripDetailUseCase
 import org.rol.transportation.domain.usecase.VerifyTripChecklistUseCase
 import org.rol.transportation.utils.Resource
 
@@ -16,17 +17,35 @@ import org.rol.transportation.utils.Resource
 class ChecklistViewModel(
     private val getTripChecklistUseCase: GetTripChecklistUseCase,
     private val getVerifyTripChecklistUseCase: VerifyTripChecklistUseCase,
+    private val getTripDetailUseCase: GetTripDetailUseCase,
     private val tripId: Int,
-    tipo: String
+    tipo: String,
+    private val vehiculoIdParam: Int
 ) : ViewModel() {
 
     private val checklistType = ChecklistType.fromString(tipo)
 
-    private val _uiState = MutableStateFlow(ChecklistUiState(tipo = checklistType))
+    private val _uiState = MutableStateFlow(ChecklistUiState(tipo = checklistType, vehiculoId = vehiculoIdParam))
     val uiState: StateFlow<ChecklistUiState> = _uiState.asStateFlow()
 
     init {
         loadChecklistData(isSilent = false)
+        if (vehiculoIdParam == 0) {
+            fetchRealVehiculoId()
+        }
+    }
+
+    private fun fetchRealVehiculoId() {
+        viewModelScope.launch {
+            getTripDetailUseCase(tripId).collect { result ->
+                if (result is Resource.Success) {
+                    val realVehiculoId = result.data.ida.vehiculoPrincipal?.id ?: 0
+                    if (realVehiculoId > 0) {
+                        _uiState.update { it.copy(vehiculoId = realVehiculoId) }
+                    }
+                }
+            }
+        }
     }
 
     fun refreshData() {
