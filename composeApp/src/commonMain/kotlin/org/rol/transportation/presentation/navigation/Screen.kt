@@ -11,7 +11,7 @@ sealed class Screen {
     data object HomeMenu : Screen()
 
     @Serializable
-    data object ChecklistTrips : Screen()
+    data class ChecklistTrips(val refreshKey: Long = 0L) : Screen()
 
     @Serializable
     data object Home : Screen()
@@ -38,7 +38,8 @@ sealed class Screen {
     data class Checklist(
         val tripId: Int,
         val tipo: String,
-        val vehiculoId: Int
+        val vehiculoId: Int,
+        val source: String = "TripDetail"
     ) : Screen()
 
     @Serializable

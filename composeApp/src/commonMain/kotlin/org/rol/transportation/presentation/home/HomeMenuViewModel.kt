@@ -30,7 +30,7 @@ class HomeMenuViewModel : ViewModel() {
                 id = 1,
                 title = "CheckList",
                 icon = Icons.Default.FactCheck,
-                route = Screen.ChecklistTrips,
+                route = Screen.ChecklistTrips(),
                 isEnabled = true
             ),
             MenuItem(

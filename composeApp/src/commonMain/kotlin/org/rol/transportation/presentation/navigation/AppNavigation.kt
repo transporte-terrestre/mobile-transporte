@@ -65,13 +65,15 @@ fun AppNavigation() {
             )
         }
 
-        composable<Screen.ChecklistTrips> {
+        composable<Screen.ChecklistTrips> { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.ChecklistTrips>()
             org.rol.transportation.presentation.checklist_trips.ChecklistTripsScreen(
+                refreshTrigger = args.refreshKey,
                 onNavigateBack = {
                     navController.navigateUp()
                 },
                 onNavigateToChecklist = { tripId, tipo, vehiculoId ->
-                    navController.navigate(Screen.Checklist(tripId, tipo, vehiculoId))
+                    navController.navigate(Screen.Checklist(tripId, tipo, vehiculoId, "ChecklistTrips"))
                 }
             )
         }
@@ -130,13 +132,20 @@ fun AppNavigation() {
                 vehiculoId = args.vehiculoId,
                 onNavigateBack = {
                     navController.popBackStack()
-                    navController.navigate(
-                        Screen.TripDetail(
-                            tripId = args.tripId,
-                            refreshKey = Clock.System.now().toEpochMilliseconds()
-                        )
-                    ) {
-                        popUpTo<Screen.TripDetail> { inclusive = true }
+                    val refreshKey = Clock.System.now().toEpochMilliseconds()
+                    if (args.source == "ChecklistTrips") {
+                        navController.navigate(Screen.ChecklistTrips(refreshKey = refreshKey)) {
+                            popUpTo<Screen.ChecklistTrips> { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(
+                            Screen.TripDetail(
+                                tripId = args.tripId,
+                                refreshKey = refreshKey
+                            )
+                        ) {
+                            popUpTo<Screen.TripDetail> { inclusive = true }
+                        }
                     }
                 },
                 //onNavigateBack = { navController.navigateUp() },

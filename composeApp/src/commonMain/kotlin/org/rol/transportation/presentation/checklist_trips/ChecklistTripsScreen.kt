@@ -59,11 +59,18 @@ import org.rol.transportation.presentation.theme.TransportationTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChecklistTripsScreen(
+    refreshTrigger: Long = 0L,
     onNavigateBack: () -> Unit,
     onNavigateToChecklist: (tripId: Int, tipo: String, vehiculoId: Int) -> Unit,
     viewModel: ChecklistTripsViewModel = koinViewModel()
 ) {
     val tripsPagingItems = viewModel.tripsPagingFlow.collectAsLazyPagingItems()
+
+    androidx.compose.runtime.LaunchedEffect(refreshTrigger) {
+        if (refreshTrigger > 0) {
+            tripsPagingItems.refresh()
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
