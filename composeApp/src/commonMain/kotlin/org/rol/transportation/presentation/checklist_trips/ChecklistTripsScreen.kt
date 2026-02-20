@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -269,7 +270,7 @@ fun TripLightCard(
                     .padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
                 Text(
-                    text = "# Viaje Múltiple ${trip.id}",
+                    text = "# Viaje ${trip.id}",
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Black
@@ -303,17 +304,28 @@ fun TripLightSegmentRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Surface(
+                color = MaterialTheme.colorScheme.secondaryContainer,
                 shape = RoundedCornerShape(4.dp),
-                color = if (isStart) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary,
                 modifier = Modifier.padding(end = 8.dp)
             ) {
-                Text(
-                    text = if (isStart) "IDA" else "VUELTA",
+                Row(
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    fontWeight = FontWeight.Black
-                )
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (isStart) "→" else "←",
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = if (isStart) "IDA" else "VUELTA",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
             }
             Text(
                 text = segment.rutaNombre,

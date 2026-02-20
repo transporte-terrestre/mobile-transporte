@@ -180,7 +180,7 @@ private fun TripDetailContent(
     onNavigateToPassengers: (tripId: Int) -> Unit,
     onNavigateToTripServices: (tripId: Int) -> Unit
 ) {
-    val segment = trip.ida // Temporalmente mostraremos IDA siempre
+    val segment = trip.ida
 
     Column(
         modifier = Modifier

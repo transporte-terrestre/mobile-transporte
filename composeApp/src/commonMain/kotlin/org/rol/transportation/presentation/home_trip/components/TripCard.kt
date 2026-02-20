@@ -69,7 +69,7 @@ fun TripCard(
                     .padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
                 Text(
-                    text = "# Viaje Múltiple ${trip.id}",
+                    text = "# Viaje ${trip.id}",
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Black
@@ -162,7 +162,7 @@ fun TripSegmentRow(segment: org.rol.transportation.domain.model.TripSegment, isS
                 )
             }
 
-            StatusBadge(status = segment.estado)
+            StatusBadge(status = segment.estado, onClick = onClick)
         }
 
         Row(
@@ -198,19 +198,6 @@ fun TripSegmentRow(segment: org.rol.transportation.domain.model.TripSegment, isS
                     overflow = TextOverflow.Ellipsis
                 )
                 Spacer(Modifier.width(8.dp))
-                
-                // Botón VER
-                androidx.compose.material3.Button(
-                    onClick = onClick,
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 0.dp),
-                    modifier = Modifier.height(26.dp),
-                    shape = RoundedCornerShape(6.dp),
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Text("VER", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelSmall)
-                }
             }
 
             Spacer(Modifier.width(8.dp))
@@ -248,10 +235,11 @@ fun TripSegmentRow(segment: org.rol.transportation.domain.model.TripSegment, isS
 
 
 @Composable
-private fun StatusBadge(status: TripStatus) {
+private fun StatusBadge(status: TripStatus, onClick: () -> Unit) {
     val color = Color(status.color)
 
     Surface(
+        onClick = onClick,
         shape = RoundedCornerShape(8.dp),
         color = color.copy(alpha = 0.15f)
     ) {
@@ -259,7 +247,7 @@ private fun StatusBadge(status: TripStatus) {
             text = status.displayName,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Medium,
+            fontWeight = FontWeight.Bold,
             color = color
         )
     }
