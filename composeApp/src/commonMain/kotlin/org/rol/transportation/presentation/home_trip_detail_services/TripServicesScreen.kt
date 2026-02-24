@@ -48,6 +48,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -59,6 +60,14 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import org.rol.transportation.data.remote.dto.trip_services.NextStepDto
 import org.rol.transportation.data.remote.dto.trip_services.SegmentDto
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.GpsOff
+import androidx.compose.material.icons.filled.GpsFixed
+import androidx.compose.material.icons.filled.ErrorOutline
+import dev.icerock.moko.permissions.compose.BindEffect
+import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.background
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,10 +75,20 @@ import org.rol.transportation.data.remote.dto.trip_services.SegmentDto
 fun TripServicesScreen(
     tripId: Int,
     onNavigateBack: () -> Unit,
+    onNavigateToMap: (Double, Double) -> Unit,
     viewModel: TripServicesViewModel = koinViewModel { parametersOf(tripId) }
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isDark = isSystemInDarkTheme()
+
+    val factory = rememberPermissionsControllerFactory()
+    val permissionsController = remember(factory) { factory.createPermissionsController() }
+
+    BindEffect(permissionsController)
+
+    LaunchedEffect(Unit) {
+        viewModel.requestPermissionAndStartLocation(permissionsController)
+    }
 
     // Manejo de Mensajes (Toast/Dialog)
     if (uiState.createSuccess != null) {
@@ -121,18 +140,29 @@ fun TripServicesScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding)) {
-            if (uiState.isLoading && !uiState.showDialog) {
-                CircularProgressIndicator(Modifier.align(Alignment.Center))
-            } else if (uiState.segments.isEmpty()) {
-                Text("No hay tramos registrados", Modifier.align(Alignment.Center), color = Color.Gray)
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(uiState.segments) { segment ->
-                        SegmentCard(segment)
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            // LOCATION SECTION
+            LocationSection(
+                uiState = uiState,
+                viewModel = viewModel,
+                permissionsController = permissionsController,
+                onNavigateToMap = onNavigateToMap
+            )
+
+            // SEGMENTS SECTION
+            Box(Modifier.fillMaxSize()) {
+                if (uiState.isLoading && !uiState.showDialog) {
+                    CircularProgressIndicator(Modifier.align(Alignment.Center))
+                } else if (uiState.segments.isEmpty()) {
+                    Text("No hay tramos registrados", Modifier.align(Alignment.Center), color = Color.Gray)
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(uiState.segments) { segment ->
+                            SegmentCard(segment)
+                        }
                     }
                 }
             }
@@ -317,4 +347,180 @@ fun CreateSegmentDialog(
             TextButton(onClick = onDismiss) { Text("Cancelar") }
         }
     )
+}
+
+@Composable
+private fun LocationSection(
+    uiState: TripServicesUiState,
+    viewModel: TripServicesViewModel,
+    permissionsController: dev.icerock.moko.permissions.PermissionsController,
+    onNavigateToMap: (Double, Double) -> Unit
+) {
+    if (uiState.showGpsDialog) {
+        GpsDisabledDialog(
+            onDismiss = { viewModel.dismissGpsDialog() },
+            onConfirm = { viewModel.openLocationSettings() }
+        )
+    }
+
+    when {
+        uiState.gpsDisabled -> {
+            GpsDisabledContent(
+                onRetry = { viewModel.retryLocationAfterSettings() }
+            )
+        }
+        uiState.permissionDenied -> {
+            PermissionDeniedContent(
+                onRetry = { viewModel.requestPermissionAndStartLocation(permissionsController) }
+            )
+        }
+        uiState.isLocationLoading -> {
+            Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator(Modifier.size(32.dp))
+                    Text("Obteniendo ubicación...", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+        uiState.currentLocation != null -> {
+            LocationCard(
+                location = uiState.currentLocation,
+                onSeeMap = {
+                    onNavigateToMap(
+                        uiState.currentLocation.latitude,
+                        uiState.currentLocation.longitude
+                    )
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun LocationSectionCard(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit
+) {
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = if (!isDark) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = title.uppercase(),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+            Column(modifier = Modifier.padding(16.dp)) {
+                content()
+            }
+        }
+    }
+}
+
+@Composable
+private fun PermissionDeniedContent(onRetry: () -> Unit) {
+    LocationSectionCard(
+        title = "Permiso Denegado",
+        icon = Icons.Filled.ErrorOutline
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                "Necesitamos acceso para ubicar tu seguimiento de ruta.",
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Button(onClick = onRetry) { Text("Conceder permiso") }
+        }
+    }
+}
+
+@Composable
+private fun GpsDisabledDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("GPS Desactivado") },
+        text = { Text("Activa los servicios de ubicación (GPS) en tu dispositivo.") },
+        confirmButton = { TextButton(onClick = onConfirm) { Text("Configuración") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+    )
+}
+
+@Composable
+private fun GpsDisabledContent(onRetry: () -> Unit) {
+    LocationSectionCard(
+        title = "GPS Apagado",
+        icon = Icons.Filled.GpsOff
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                "No hay señal de GPS local.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Button(onClick = onRetry) { Text("Reintentar") }
+        }
+    }
+}
+
+@Composable
+private fun LocationCard(
+    location: org.rol.transportation.domain.model.LocationModel,
+    onSeeMap: () -> Unit
+) {
+    LocationSectionCard(
+        title = "Ubicación Actual",
+        icon = Icons.Filled.GpsFixed
+    ) {
+        Column(Modifier.fillMaxWidth()) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Column {
+                    Text("LATITUD", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    Text("${location.latitude}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text("LONGITUD", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    Text("${location.longitude}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            Button(
+                onClick = onSeeMap,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Ver en mapa")
+            }
+        }
+    }
 }

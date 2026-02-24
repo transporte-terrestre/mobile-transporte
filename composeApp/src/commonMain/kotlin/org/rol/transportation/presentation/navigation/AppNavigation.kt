@@ -27,6 +27,7 @@ import org.rol.transportation.presentation.home_trip_detail_services.TripService
 import org.rol.transportation.presentation.login.LoginScreen
 import org.rol.transportation.presentation.notifications.NotificationsScreen
 import org.rol.transportation.presentation.profile.ProfileScreen
+import org.rol.transportation.presentation.map.MapScreen
 import kotlin.time.Clock
 
 
@@ -120,7 +121,10 @@ fun AppNavigation() {
             val args = backStackEntry.toRoute<Screen.TripServices>()
             TripServicesScreen(
                 tripId = args.tripId,
-                onNavigateBack = { navController.navigateUp() }
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToMap = { lat, lng ->
+                    navController.navigate(Screen.Map(lat, lng))
+                }
             )
         }
 
@@ -363,6 +367,15 @@ fun AppNavigation() {
             PdfViewerScreen(
                 url = args.url,
                 title = args.title,
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        composable<Screen.Map> { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.Map>()
+            MapScreen(
+                latitude = args.latitude,
+                longitude = args.longitude,
                 onNavigateBack = { navController.navigateUp() }
             )
         }

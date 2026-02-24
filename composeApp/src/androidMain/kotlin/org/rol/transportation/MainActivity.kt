@@ -10,10 +10,14 @@ import org.rol.transportation.di.appModule
 import org.rol.transportation.di.dataModule
 import org.rol.transportation.di.imageModule
 import org.rol.transportation.di.networkModule
+import org.rol.transportation.platform.AppContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        //Inicializar Nativamente GPS
+        AppContext.init(this)
 
         // Inicializar Koin solo si no está inicializado
         if (GlobalContext.getOrNull() == null) {

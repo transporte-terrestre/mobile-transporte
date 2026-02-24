@@ -25,6 +25,9 @@ paging3 = "3.4.0"
 peekaboo = "0.5.2"
 moko = "0.18.0"
 pdfmp = "1.0.9"
+play-services-location = "21.3.0"
+play-services-maps = "19.0.0"
+maps-compose = "4.3.3"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -80,8 +83,8 @@ paging3-common = { module = "androidx.paging:paging-common", version.ref = "pagi
 paging3-compose = { module = "androidx.paging:paging-compose", version.ref = "paging3" }
 
 # Peekaboo
-peekaboo-ImagePicker = { module = "io.github.onseok:peekaboo-image-picker", version.ref = "peekaboo" }
-peekaboo-Ui = { module = "io.github.onseok:peekaboo-ui", version.ref = "peekaboo"}
+peekaboo-imagePicker = { module = "io.github.onseok:peekaboo-image-picker", version.ref = "peekaboo" }
+peekaboo-ui = { module = "io.github.onseok:peekaboo-ui", version.ref = "peekaboo"}
 
 # Moko
 moko-permissions = { module = "dev.icerock.moko:permissions", version.ref = "moko" }
@@ -89,6 +92,13 @@ moko-compose = { module = "dev.icerock.moko:permissions-compose", version.ref = 
 
 # PDFMP
 pdfmp-compose = { module = "com.dshatz.pdfmp:pdfmp-compose", version.ref = "pdfmp" }
+
+# Play Services Location
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "play-services-location" }
+
+# Maps Compose
+maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "maps-compose" }
+play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "play-services-maps" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

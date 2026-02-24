@@ -3,6 +3,14 @@ import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import java.util.Properties
 
 
+// BuildKonfig
+val propertiesFile = rootProject.file("local.properties")
+val properties = Properties()
+if (propertiesFile.exists()) {
+    properties.load(propertiesFile.inputStream())
+}
+
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
@@ -40,6 +48,10 @@ kotlin {
 
             implementation(libs.kotlinx.coroutines.android)
             //implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.play.services.location)
+
+            implementation(libs.maps.compose)
+            implementation(libs.play.services.maps)
 
         }
         commonMain.dependencies {
@@ -110,6 +122,8 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+
+        manifestPlaceholders["MAPS_API_KEY"] = properties.getProperty("MAPS_API_KEY") ?: ""
     }
     packaging {
         resources {
@@ -134,13 +148,13 @@ dependencies {
 buildkonfig {
     packageName = "org.rol.transportation"
 
-    // Leer desde local.properties
+    /*// Leer desde local.properties
     val propertiesFile = rootProject.file("local.properties")
     val properties = Properties()
 
     if (propertiesFile.exists()) {
         properties.load(propertiesFile.inputStream())
-    }
+    }*/
 
     defaultConfigs {
         // Lee los valores desde local.properties
@@ -148,6 +162,12 @@ buildkonfig {
             STRING,
             "BASE_URL",
             properties.getProperty("BASE_URL") ?: ""
+        )
+
+        buildConfigField(
+            STRING,
+            "MAPS_API_KEY",
+            properties.getProperty("MAPS_API_KEY") ?: ""
         )
 
     }

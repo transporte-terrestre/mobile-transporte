@@ -12,12 +12,19 @@ import org.rol.transportation.domain.usecase.CreateSegmentUseCase
 import org.rol.transportation.domain.usecase.GetNextStepUseCase
 import org.rol.transportation.domain.usecase.GetSegmentsUseCase
 import org.rol.transportation.utils.Resource
+import org.rol.transportation.domain.usecase.GetLocationUseCase
+import dev.icerock.moko.permissions.Permission
+import dev.icerock.moko.permissions.PermissionsController
+import kotlinx.coroutines.flow.catch
+import dev.icerock.moko.permissions.DeniedAlwaysException
+import dev.icerock.moko.permissions.DeniedException
 
 class TripServicesViewModel(
     private val tripId: Int,
     private val getSegmentsUseCase: GetSegmentsUseCase,
     private val getNextStepUseCase: GetNextStepUseCase,
-    private val createSegmentUseCase: CreateSegmentUseCase
+    private val createSegmentUseCase: CreateSegmentUseCase,
+    private val getLocationUseCase: GetLocationUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TripServicesUiState())
@@ -25,6 +32,57 @@ class TripServicesViewModel(
 
     init {
         loadData()
+    }
+
+    fun requestPermissionAndStartLocation(permissionsController: PermissionsController) {
+        viewModelScope.launch {
+            try {
+                permissionsController.providePermission(Permission.LOCATION)
+                _uiState.update { it.copy(permissionDenied = false) }
+                if (getLocationUseCase.isLocationEnabled()) {
+                    startLocationUpdates()
+                } else {
+                    _uiState.update { it.copy(gpsDisabled = true, showGpsDialog = true) }
+                }
+            } catch (e: DeniedAlwaysException) {
+                _uiState.update { it.copy(permissionDenied = true, isLocationLoading = false) }
+            } catch (e: DeniedException) {
+                _uiState.update { it.copy(permissionDenied = true, isLocationLoading = false) }
+            }
+        }
+    }
+
+    private fun startLocationUpdates() {
+        println("GPS_DEBUG: startLocationUpdates() en el ViewModel disparado")
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLocationLoading = true, gpsDisabled = false, showGpsDialog = false) }
+            getLocationUseCase()
+                .catch { e -> 
+                    println("GPS_DEBUG: Exception capturada: ${e.message}")
+                    _uiState.update { it.copy(error = e.message, isLocationLoading = false) }
+                }
+                .collect { location ->
+                    println("GPS_DEBUG: recolectado nuevo location -> lat: ${location.latitude}, lng: ${location.longitude}")
+                    _uiState.update { it.copy(currentLocation = location, isLocationLoading = false) }
+                }
+        }
+    }
+
+    fun openLocationSettings() {
+        getLocationUseCase.openLocationSettings()
+        _uiState.update { it.copy(showGpsDialog = false) }
+    }
+
+    fun dismissGpsDialog() {
+        _uiState.update { it.copy(showGpsDialog = false) }
+    }
+
+    fun retryLocationAfterSettings() {
+        if (getLocationUseCase.isLocationEnabled()) {
+            startLocationUpdates()
+        } else {
+            _uiState.update { it.copy(gpsDisabled = true, showGpsDialog = true) }
+        }
     }
 
     fun loadData() {

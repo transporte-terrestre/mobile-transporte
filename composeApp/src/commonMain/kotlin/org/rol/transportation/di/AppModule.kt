@@ -51,6 +51,7 @@ import org.rol.transportation.presentation.home_trip_detail_passenger.PassengerV
 import org.rol.transportation.presentation.home_trip_detail_services.TripServicesViewModel
 import org.rol.transportation.presentation.login.LoginViewModel
 import org.rol.transportation.presentation.notifications.NotificationsViewModel
+import org.rol.transportation.domain.usecase.GetLocationUseCase
 import org.rol.transportation.presentation.profile.ProfileViewModel
 
 
@@ -89,6 +90,7 @@ val appModule = module {
     factory { VerifyTripChecklistUseCase(get()) }
     factory { GetDriverDocumentsUseCase(get(), get()) }
     factory { GetNotificationsUseCase(get(), get()) }
+    factory { GetLocationUseCase(get()) }
 
 
     // ViewModels
@@ -222,7 +224,8 @@ val appModule = module {
             tripId = parameters.get(),
             getSegmentsUseCase = get(),
             getNextStepUseCase = get(),
-            createSegmentUseCase = get()
+            createSegmentUseCase = get(),
+            getLocationUseCase = get()
         )
     }
 

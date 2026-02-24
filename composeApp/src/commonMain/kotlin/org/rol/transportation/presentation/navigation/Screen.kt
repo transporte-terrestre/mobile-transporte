@@ -110,4 +110,7 @@ sealed class Screen {
 
     @Serializable
     data class PdfViewer(val url: String, val title: String) : Screen()
+
+    @Serializable
+    data class Map(val latitude: Double, val longitude: Double) : Screen()
 }

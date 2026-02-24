@@ -2,6 +2,9 @@ package org.rol.transportation.di
 
 import com.russhwolf.settings.Settings
 import org.koin.dsl.module
+import org.rol.transportation.platform.LocationDataSource
+import org.rol.transportation.domain.repository.LocationRepository
+import org.rol.transportation.domain.repository.LocationRepositoryImpl
 import org.rol.transportation.data.local.TokenManager
 import org.rol.transportation.data.remote.api.AuthApi
 import org.rol.transportation.data.remote.api.ChecklistApi
@@ -57,6 +60,7 @@ val dataModule = module {
     single { Settings() }
 
     single { TokenManager(get()) }
+    single { LocationDataSource() }
 
     // API
     single { AuthApi(get()) }
@@ -94,5 +98,6 @@ val dataModule = module {
     single<TripServicesRepository> { TripServicesRepositoryImpl(get()) }
     single<DriverRepository> { DriverRepositoryImpl(get()) }
     single<NotificationRepository> { NotificationRepositoryImpl(get()) }
+    single<LocationRepository> { LocationRepositoryImpl(get()) }
 
 }

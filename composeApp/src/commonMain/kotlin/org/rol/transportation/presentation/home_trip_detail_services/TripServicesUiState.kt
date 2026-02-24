@@ -11,5 +11,10 @@ data class TripServicesUiState (
     val showDialog: Boolean = false,
     val nextStepData: NextStepDto? = null,
     val isCreating: Boolean = false,
-    val createSuccess: String? = null
+    val createSuccess: String? = null,
+    val currentLocation: org.rol.transportation.domain.model.LocationModel? = null,
+    val showGpsDialog: Boolean = false,
+    val gpsDisabled: Boolean = false,
+    val permissionDenied: Boolean = false,
+    val isLocationLoading: Boolean = false
 )
