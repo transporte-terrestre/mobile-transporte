@@ -20,6 +20,8 @@ val networkModule = module {
         val tokenManager: TokenManager = get()
 
         HttpClient {
+            expectSuccess = true
+            
             install(ContentNegotiation) {
                 json(Json {
                     ignoreUnknownKeys = true

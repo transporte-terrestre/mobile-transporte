@@ -2,7 +2,7 @@ package org.rol.transportation.di
 
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
-import org.rol.transportation.domain.usecase.CreateSegmentUseCase
+import org.rol.transportation.domain.usecase.RegistrarServicioUseCase
 import org.rol.transportation.domain.usecase.GetChecklistDocumentUseCase
 import org.rol.transportation.domain.usecase.GetDocumentInspectionUseCase
 import org.rol.transportation.domain.usecase.GetDriverDocumentsUseCase
@@ -10,6 +10,7 @@ import org.rol.transportation.domain.usecase.GetFirstAidUseCase
 import org.rol.transportation.domain.usecase.GetInspectionSheetUseCase
 import org.rol.transportation.domain.usecase.GetLightsAlarmUseCase
 import org.rol.transportation.domain.usecase.GetNextStepUseCase
+import org.rol.transportation.domain.usecase.GetProximoTramoUseCase
 import org.rol.transportation.domain.usecase.GetNotificationsUseCase
 import org.rol.transportation.domain.usecase.GetPassengersUseCase
 import org.rol.transportation.domain.usecase.GetSeatBeltsUseCase
@@ -86,7 +87,8 @@ val appModule = module {
     factory { UpsertPassengersUseCase(get()) }
     factory { GetSegmentsUseCase(get()) }
     factory { GetNextStepUseCase(get()) }
-    factory { CreateSegmentUseCase(get()) }
+    factory { GetProximoTramoUseCase(get()) }
+    factory { RegistrarServicioUseCase(get()) }
     factory { VerifyTripChecklistUseCase(get()) }
     factory { GetDriverDocumentsUseCase(get(), get()) }
     factory { GetNotificationsUseCase(get(), get()) }
@@ -223,8 +225,8 @@ val appModule = module {
         TripServicesViewModel(
             tripId = parameters.get(),
             getSegmentsUseCase = get(),
-            getNextStepUseCase = get(),
-            createSegmentUseCase = get(),
+            getProximoTramoUseCase = get(),
+            registrarServicioUseCase = get(),
             getLocationUseCase = get()
         )
     }

@@ -7,10 +7,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.rol.transportation.data.remote.dto.trip_services.CreateSegmentRequest
-import org.rol.transportation.domain.usecase.CreateSegmentUseCase
-import org.rol.transportation.domain.usecase.GetNextStepUseCase
+import org.rol.transportation.data.remote.dto.trip_services.RegistrarServicioRequest
+import org.rol.transportation.domain.usecase.GetProximoTramoUseCase
 import org.rol.transportation.domain.usecase.GetSegmentsUseCase
+import org.rol.transportation.domain.usecase.RegistrarServicioUseCase
 import org.rol.transportation.utils.Resource
 import org.rol.transportation.domain.usecase.GetLocationUseCase
 import dev.icerock.moko.permissions.Permission
@@ -18,12 +18,18 @@ import dev.icerock.moko.permissions.PermissionsController
 import kotlinx.coroutines.flow.catch
 import dev.icerock.moko.permissions.DeniedAlwaysException
 import dev.icerock.moko.permissions.DeniedException
+import kotlinx.coroutines.Job
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.LocalDateTime
 
 class TripServicesViewModel(
     private val tripId: Int,
     private val getSegmentsUseCase: GetSegmentsUseCase,
-    private val getNextStepUseCase: GetNextStepUseCase,
-    private val createSegmentUseCase: CreateSegmentUseCase,
+    private val getProximoTramoUseCase: GetProximoTramoUseCase,
+    private val registrarServicioUseCase: RegistrarServicioUseCase,
     private val getLocationUseCase: GetLocationUseCase
 ) : ViewModel() {
 
@@ -34,16 +40,16 @@ class TripServicesViewModel(
         loadData()
     }
 
+    private var locationJob: Job? = null
+
+    // ── Permisos y GPS ──
+
     fun requestPermissionAndStartLocation(permissionsController: PermissionsController) {
         viewModelScope.launch {
             try {
                 permissionsController.providePermission(Permission.LOCATION)
                 _uiState.update { it.copy(permissionDenied = false) }
-                if (getLocationUseCase.isLocationEnabled()) {
-                    startLocationUpdates()
-                } else {
-                    _uiState.update { it.copy(gpsDisabled = true, showGpsDialog = true) }
-                }
+                // No iniciamos la ubicación aquí automáticamente.
             } catch (e: DeniedAlwaysException) {
                 _uiState.update { it.copy(permissionDenied = true, isLocationLoading = false) }
             } catch (e: DeniedException) {
@@ -53,19 +59,22 @@ class TripServicesViewModel(
     }
 
     private fun startLocationUpdates() {
-        println("GPS_DEBUG: startLocationUpdates() en el ViewModel disparado")
-        viewModelScope.launch {
+        if (locationJob?.isActive == true) return
+        locationJob = viewModelScope.launch {
             _uiState.update { it.copy(isLocationLoading = true, gpsDisabled = false, showGpsDialog = false) }
             getLocationUseCase()
-                .catch { e -> 
-                    println("GPS_DEBUG: Exception capturada: ${e.message}")
+                .catch { e ->
                     _uiState.update { it.copy(error = e.message, isLocationLoading = false) }
                 }
                 .collect { location ->
-                    println("GPS_DEBUG: recolectado nuevo location -> lat: ${location.latitude}, lng: ${location.longitude}")
                     _uiState.update { it.copy(currentLocation = location, isLocationLoading = false) }
                 }
         }
+    }
+
+    private fun stopLocationUpdates() {
+        locationJob?.cancel()
+        locationJob = null
     }
 
     fun openLocationSettings() {
@@ -85,102 +94,234 @@ class TripServicesViewModel(
         }
     }
 
+    // ── Carga de datos ──
+
     fun loadData() {
         _uiState.update { it.copy(isLoading = true, error = null) }
-
         viewModelScope.launch {
             getSegmentsUseCase(tripId).collect { result ->
-                if (result is Resource.Success) {
-                    _uiState.update { it.copy(segments = result.data) }
+                when (result) {
+                    is Resource.Success -> _uiState.update { it.copy(segments = result.data, isLoading = false) }
+                    is Resource.Error -> _uiState.update { it.copy(isLoading = false, error = result.message) }
+                    is Resource.Loading -> {}
                 }
             }
+        }
+    }
 
-            getNextStepUseCase(tripId).collect { result ->
+    // ── Menú de agregar ──
+
+    fun toggleAddMenu() {
+        if (!_uiState.value.showAddMenu) {
+            _uiState.update { it.copy(showAddMenu = true, isLoadingMenuProximo = true) }
+            viewModelScope.launch {
+                getProximoTramoUseCase(tripId).collect { result ->
+                    when (result) {
+                        is Resource.Success -> {
+                            _uiState.update { it.copy(proximoTramoData = result.data, isLoadingMenuProximo = false) }
+                        }
+                        is Resource.Error -> {
+                            _uiState.update { it.copy(error = result.message, isLoadingMenuProximo = false) }
+                        }
+                        is Resource.Loading -> {
+                            _uiState.update { it.copy(isLoadingMenuProximo = true) }
+                        }
+                    }
+                }
+            }
+        } else {
+            _uiState.update { it.copy(showAddMenu = false) }
+        }
+    }
+
+    fun dismissAddMenu() {
+        _uiState.update { it.copy(showAddMenu = false) }
+    }
+
+    fun selectAddOption(option: AddOption) {
+        _uiState.update { it.copy(showAddMenu = false, selectedAddOption = option) }
+
+        when (option) {
+            AddOption.PROXIMO -> loadProximoTramoAndShowSheet()
+            AddOption.OCASIONAL -> showSheetForOcasional()
+            AddOption.DESCANSO -> showSheetForDescanso()
+        }
+    }
+
+    // ── Próximo: carga API proximo-tramo ──
+
+    private fun loadProximoTramoAndShowSheet() {
+        _uiState.update { it.copy(isLoadingProximoTramo = true, showLocationSheet = true) }
+        viewModelScope.launch {
+            getProximoTramoUseCase(tripId).collect { result ->
                 when (result) {
                     is Resource.Success -> {
-                        val data = result.data
-
-                        val hasValidId = data.paradaPartidaId != null
-
-                        // Parsear "2/1", "1/1", "3/2", etc.
-                        val isOverflow = try {
-                            val parts = data.progreso?.split("/")
-                            if (parts?.size == 2) {
-                                val current = parts[0].toInt()
-                                val total = parts[1].toInt()
-                                // Si el paso actual (2) es mayor al total (1), es un desbordamiento.
-                                current > total
-                            } else {
-                                false
-                            }
-                        } catch (e: Exception) {
-                            false
-                        }
-
-                        // El botón solo se ve si hay ID válido Y NO nos hemos pasado del total
-                        val shouldShowButton = hasValidId && !isOverflow
-
                         _uiState.update {
-                            it.copy(
-                                isAddButtonVisible = shouldShowButton,
-                                nextStepData = if (shouldShowButton) data else null,
-                                isLoading = false
-                            )
+                            it.copy(proximoTramoData = result.data, isLoadingProximoTramo = false)
                         }
                     }
                     is Resource.Error -> {
                         _uiState.update {
-                            it.copy(
-                                isAddButtonVisible = false,
-                                nextStepData = null,
-                                isLoading = false
-                            )
+                            it.copy(error = result.message, isLoadingProximoTramo = false, showLocationSheet = false)
                         }
                     }
-                    else -> {}
+                    is Resource.Loading -> {
+                        _uiState.update { it.copy(isLoadingProximoTramo = true) }
+                    }
                 }
             }
         }
     }
 
-    fun openCreateDialog() {
-        if (_uiState.value.nextStepData != null) {
-            _uiState.update { it.copy(showDialog = true, error = null) }
+    // ── Ocasional: solo abre el sheet (usa GPS) ──
+
+    private fun showSheetForOcasional() {
+        if (getLocationUseCase.isLocationEnabled()) {
+            startLocationUpdates()
+        } else {
+            _uiState.update { it.copy(gpsDisabled = true, showGpsDialog = true) }
+        }
+
+        _uiState.update {
+            it.copy(
+                showLocationSheet = true,
+                isLoadingProximoTramo = true
+            )
+        }
+        // Cargar proximo-tramo para obtener datos previos (ultimoKm, ultimaHora, ultimosPasajeros)
+        viewModelScope.launch {
+            getProximoTramoUseCase(tripId).collect { result ->
+                when (result) {
+                    is Resource.Success -> {
+                        _uiState.update { it.copy(proximoTramoData = result.data, isLoadingProximoTramo = false) }
+                    }
+                    is Resource.Error -> {
+                        // Aun así mostrar el sheet, solo que sin datos previos
+                        _uiState.update { it.copy(isLoadingProximoTramo = false) }
+                    }
+                    is Resource.Loading -> {}
+                }
+            }
         }
     }
 
-    fun closeDialog() {
-        _uiState.update { it.copy(showDialog = false) }
+    // ── Descanso: abre sheet con datos previos ──
+
+    private fun showSheetForDescanso() {
+        _uiState.update {
+            it.copy(
+                showLocationSheet = true,
+                isLoadingProximoTramo = true
+            )
+        }
+        viewModelScope.launch {
+            getProximoTramoUseCase(tripId).collect { result ->
+                when (result) {
+                    is Resource.Success -> {
+                        _uiState.update { it.copy(proximoTramoData = result.data, isLoadingProximoTramo = false) }
+                    }
+                    is Resource.Error -> {
+                        _uiState.update { it.copy(isLoadingProximoTramo = false) }
+                    }
+                    is Resource.Loading -> {}
+                }
+            }
+        }
     }
 
-    fun createSegment(
-        paradaPartidaId: Int,
-        paradaLlegadaId: Int,
-        horaTermino: String,
-        kmFinal: Double,
-        numeroPasajeros: Int,
-        observaciones: String
-    ) {
-        val nextStep = _uiState.value.nextStepData ?: return
+    // ── Registrar servicio ──
 
-        val request = CreateSegmentRequest(
-            paradaPartidaId = paradaPartidaId,
-            paradaLlegadaId = paradaLlegadaId,
-            horaSalida = nextStep.horaSalida ?: "00:00:00",
-            horaTermino = horaTermino,
-            kmInicial = nextStep.kmInicial ?: 0.0,
-            kmFinal = kmFinal,
-            numeroPasajeros = numeroPasajeros,
-            observaciones = observaciones
+    /**
+     * Registra servicio para "Próximo" (usa tipo del proximo-tramo).
+     */
+    fun registrarServicio(
+        horaActual: String,
+        kilometrajeActual: Double,
+        cantidadPasajeros: Int
+    ) {
+        val proximo = _uiState.value.proximoTramoData ?: return
+        val location = _uiState.value.currentLocation
+
+        val isoDate = formatTimeWithCurrentDate(horaActual)
+        val request = RegistrarServicioRequest(
+            longitud = location?.longitude ?: 0.0,
+            latitud = location?.latitude ?: 0.0,
+            horaActual = isoDate,
+            nombreLugar = proximo.nombreLugar ?: "",
+            kilometrajeActual = kilometrajeActual,
+            cantidadPasajeros = cantidadPasajeros,
+            rutaParadaId = proximo.rutaParadaId
         )
 
+        submitRegistro(proximo.tipo, request)
+    }
+
+    /**
+     * Registra parada ocasional (tipo fijo = "parada").
+     */
+    fun registrarParadaOcasional(
+        nombreLugar: String,
+        horaActual: String,
+        kilometrajeActual: Double,
+        cantidadPasajeros: Int
+    ) {
+        val location = _uiState.value.currentLocation
+
+        val isoDate = formatTimeWithCurrentDate(horaActual)
+        val request = RegistrarServicioRequest(
+            longitud = location?.longitude ?: 0.0,
+            latitud = location?.latitude ?: 0.0,
+            horaActual = isoDate,
+            nombreLugar = nombreLugar,
+            kilometrajeActual = kilometrajeActual,
+            cantidadPasajeros = cantidadPasajeros,
+            rutaParadaId = null
+        )
+
+        submitRegistro("parada", request)
+    }
+
+    /**
+     * Registra descanso (tipo fijo = "descanso").
+     */
+    fun registrarDescanso(
+        horaActual: String,
+        kilometrajeActual: Double,
+        cantidadPasajeros: Int
+    ) {
+        val location = _uiState.value.currentLocation
+
+        val isoDate = formatTimeWithCurrentDate(horaActual)
+        val request = RegistrarServicioRequest(
+            longitud = location?.longitude ?: 0.0,
+            latitud = location?.latitude ?: 0.0,
+            horaActual = isoDate,
+            nombreLugar = "Descanso",
+            kilometrajeActual = kilometrajeActual,
+            cantidadPasajeros = cantidadPasajeros,
+            rutaParadaId = null
+        )
+
+        submitRegistro("descanso", request)
+    }
+
+    private fun submitRegistro(tipo: String, request: RegistrarServicioRequest) {
         viewModelScope.launch {
-            createSegmentUseCase(tripId, request).collect { result ->
-                when(result) {
+            registrarServicioUseCase(tripId, tipo, request).collect { result ->
+                when (result) {
                     is Resource.Loading -> _uiState.update { it.copy(isCreating = true) }
                     is Resource.Success -> {
-                        _uiState.update { it.copy(isCreating = false, showDialog = false, createSuccess = "Tramo registrado correctamente") }
-                        loadData() // Recargar todo
+                        _uiState.update {
+                            it.copy(
+                                isCreating = false,
+                                showLocationSheet = false,
+                                proximoTramoData = null,
+                                selectedAddOption = null,
+                                createSuccess = "Servicio registrado correctamente"
+                            )
+                        }
+                        stopLocationUpdates()
+                        loadData()
                     }
                     is Resource.Error -> _uiState.update { it.copy(isCreating = false, error = result.message) }
                 }
@@ -188,7 +329,35 @@ class TripServicesViewModel(
         }
     }
 
+    // ── Utilidades ──
+
     fun clearMessages() {
         _uiState.update { it.copy(error = null, createSuccess = null) }
+    }
+
+    fun hideLocationSheet() {
+        stopLocationUpdates()
+        _uiState.update { it.copy(showLocationSheet = false, selectedAddOption = null, proximoTramoData = null) }
+    }
+
+    private fun formatTimeWithCurrentDate(timeStr: String): String {
+        return try {
+            val parts = timeStr.split(":")
+            if (parts.size >= 2) {
+                val hour = parts[0].toIntOrNull() ?: 0
+                val min = parts[1].toIntOrNull() ?: 0
+                val tz = TimeZone.currentSystemDefault()
+                val now = Clock.System.now().toLocalDateTime(tz)
+                val m = now.monthNumber.toString().padStart(2, '0')
+                val d = now.dayOfMonth.toString().padStart(2, '0')
+                val h = hour.toString().padStart(2, '0')
+                val minStr = min.toString().padStart(2, '0')
+                "${now.year}-$m-${d}T$h:$minStr:00.000Z"
+            } else {
+                Clock.System.now().toString()
+            }
+        } catch (e: Exception) {
+            Clock.System.now().toString()
+        }
     }
 }

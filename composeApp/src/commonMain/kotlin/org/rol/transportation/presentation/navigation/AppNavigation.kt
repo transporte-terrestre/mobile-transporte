@@ -121,10 +121,7 @@ fun AppNavigation() {
             val args = backStackEntry.toRoute<Screen.TripServices>()
             TripServicesScreen(
                 tripId = args.tripId,
-                onNavigateBack = { navController.navigateUp() },
-                onNavigateToMap = { lat, lng ->
-                    navController.navigate(Screen.Map(lat, lng))
-                }
+                onNavigateBack = { navController.navigateUp() }
             )
         }
 

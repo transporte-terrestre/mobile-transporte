@@ -1,6 +1,7 @@
 package org.rol.transportation.presentation.home_trip_detail_services
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,11 +16,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.background
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -29,12 +31,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -42,6 +47,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -52,30 +59,39 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
-import org.rol.transportation.data.remote.dto.trip_services.NextStepDto
 import org.rol.transportation.data.remote.dto.trip_services.SegmentDto
+import org.rol.transportation.data.remote.dto.trip_services.ProximoTramoDto
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.GpsOff
 import androidx.compose.material.icons.filled.GpsFixed
-import androidx.compose.material.icons.filled.ErrorOutline
 import dev.icerock.moko.permissions.compose.BindEffect
 import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.foundation.background
-
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import org.rol.transportation.platform.MapView
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Coffee
+import androidx.compose.material.icons.filled.PinDrop
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.PauseCircle
+import androidx.compose.material.icons.filled.Schedule
+import kotlinx.coroutines.delay
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Duration.Companion.minutes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripServicesScreen(
     tripId: Int,
     onNavigateBack: () -> Unit,
-    onNavigateToMap: (Double, Double) -> Unit,
     viewModel: TripServicesViewModel = koinViewModel { parametersOf(tripId) }
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -90,7 +106,7 @@ fun TripServicesScreen(
         viewModel.requestPermissionAndStartLocation(permissionsController)
     }
 
-    // Manejo de Mensajes (Toast/Dialog)
+    // Manejo de Mensajes
     if (uiState.createSuccess != null) {
         AlertDialog(
             onDismissRequest = { viewModel.clearMessages() },
@@ -101,16 +117,61 @@ fun TripServicesScreen(
         )
     }
 
-    // Modal de Creación
-    if (uiState.showDialog && uiState.nextStepData != null) {
-        CreateSegmentDialog(
-            data = uiState.nextStepData!!,
-            isCreating = uiState.isCreating,
-            onDismiss = { viewModel.closeDialog() },
-            onConfirm = { pPartida, pLlegada, hTermino, kmFin, numPasajeros, obs ->
-                viewModel.createSegment(pPartida, pLlegada, hTermino, kmFin, numPasajeros, obs)
+    // Bottom Sheet
+    if (uiState.showLocationSheet) {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
+            onDismissRequest = { viewModel.hideLocationSheet() },
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surface
+        ) {
+            if (uiState.isLoadingProximoTramo) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(48.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
+                        Spacer(Modifier.height(12.dp))
+                        Text("Cargando datos...", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            } else {
+                when (uiState.selectedAddOption) {
+                    AddOption.PROXIMO -> {
+                        if (uiState.proximoTramoData != null) {
+                            ProximoTramoSheet(
+                                data = uiState.proximoTramoData!!,
+                                isCreating = uiState.isCreating,
+                                onSave = { hora, km, pax ->
+                                    viewModel.registrarServicio(hora, km, pax)
+                                }
+                            )
+                        }
+                    }
+                    AddOption.OCASIONAL -> {
+                        OcasionalSheet(
+                            proximoData = uiState.proximoTramoData,
+                            currentLocation = uiState.currentLocation,
+                            isCreating = uiState.isCreating,
+                            onSave = { nombre, hora, km, pax ->
+                                viewModel.registrarParadaOcasional(nombre, hora, km, pax)
+                            }
+                        )
+                    }
+                    AddOption.DESCANSO -> {
+                        DescansoSheet(
+                            proximoData = uiState.proximoTramoData,
+                            isCreating = uiState.isCreating,
+                            onSave = { hora, km, pax ->
+                                viewModel.registrarDescanso(hora, km, pax)
+                            }
+                        )
+                    }
+                    null -> {}
+                }
             }
-        )
+        }
     }
 
     Scaffold(
@@ -128,399 +189,613 @@ fun TripServicesScreen(
             )
         },
         floatingActionButton = {
-            if (uiState.isAddButtonVisible) {
-                FloatingActionButton(
-                    onClick = { viewModel.openCreateDialog() },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White
-                ) {
-                    Icon(Icons.Default.Add, "Agregar Tramo")
+            if (uiState.isFabVisible) {
+                Box {
+                    FloatingActionButton(
+                        onClick = { viewModel.toggleAddMenu() },
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White
+                    ) {
+                        Icon(Icons.Default.Add, "Agregar")
+                    }
+
+                    DropdownMenu(
+                        expanded = uiState.showAddMenu,
+                        onDismissRequest = { viewModel.dismissAddMenu() }
+                    ) {
+                        if (uiState.isLoadingMenuProximo) {
+                            DropdownMenuItem(
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Cargando...", fontWeight = FontWeight.SemiBold)
+                                    }
+                                },
+                                onClick = {}
+                            )
+                        } else {
+                            val tipoInfo = uiState.proximoTramoData?.tipo?.let { getTipoInfo(it) }
+                                ?: getTipoInfo("punto")
+                            
+                            val menuLabel = when (uiState.proximoTramoData?.tipo?.lowercase()) {
+                                "origen" -> "Iniciar"
+                                "destino" -> "Terminar"
+                                else -> "Próximo"
+                            }
+
+                            DropdownMenuItem(
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(tipoInfo.icon, null, tint = tipoInfo.color, modifier = Modifier.size(20.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(menuLabel, fontWeight = FontWeight.SemiBold)
+                                    }
+                                },
+                                onClick = { viewModel.selectAddOption(AddOption.PROXIMO) }
+                            )
+                        }
+                        DropdownMenuItem(
+                            text = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Filled.PinDrop, null, tint = Color(0xFFFF9800), modifier = Modifier.size(20.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Ocasional", fontWeight = FontWeight.SemiBold)
+                                }
+                            },
+                            onClick = { viewModel.selectAddOption(AddOption.OCASIONAL) }
+                        )
+                        DropdownMenuItem(
+                            text = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Filled.PauseCircle, null, tint = Color(0xFF795548), modifier = Modifier.size(20.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Descanso", fontWeight = FontWeight.SemiBold)
+                                }
+                            },
+                            onClick = { viewModel.selectAddOption(AddOption.DESCANSO) }
+                        )
+                    }
                 }
             }
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {
-            // LOCATION SECTION
-            LocationSection(
-                uiState = uiState,
-                viewModel = viewModel,
-                permissionsController = permissionsController,
-                onNavigateToMap = onNavigateToMap
-            )
-
-            // SEGMENTS SECTION
-            Box(Modifier.fillMaxSize()) {
-                if (uiState.isLoading && !uiState.showDialog) {
-                    CircularProgressIndicator(Modifier.align(Alignment.Center))
-                } else if (uiState.segments.isEmpty()) {
-                    Text("No hay tramos registrados", Modifier.align(Alignment.Center), color = Color.Gray)
-                } else {
-                    LazyColumn(
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(uiState.segments) { segment ->
-                            SegmentCard(segment)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun SegmentCard(segment: SegmentDto) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-    ) {
-        Column(Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(color = MaterialTheme.colorScheme.primaryContainer, shape = CircleShape) {
-                    Text(
-                        "${segment.orden}",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    "${segment.paradaPartidaNombre} ➝ ${segment.paradaLlegadaNombre ?: "..."}",
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(0.5f))
-
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Column {
-                    Text("Salida", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                    Text(segment.horaSalida, fontWeight = FontWeight.Bold)
-                    Text("${segment.kmInicial} km", style = MaterialTheme.typography.bodySmall)
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text("Llegada", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                    Text(segment.horaTermino ?: "--:--", fontWeight = FontWeight.Bold)
-                    Text("${segment.kmFinal ?: 0} km", style = MaterialTheme.typography.bodySmall)
-                }
-            }
-            if (!segment.observaciones.isNullOrBlank()) {
-                Spacer(Modifier.height(8.dp))
-                Text("Obs: ${segment.observaciones}", style = MaterialTheme.typography.bodySmall, fontStyle = FontStyle.Italic)
-            }
-        }
-    }
-}
-
-@Composable
-fun CreateSegmentDialog(
-    data: NextStepDto,
-    isCreating: Boolean,
-    onDismiss: () -> Unit,
-    onConfirm: (Int, Int, String, Double, Int, String) -> Unit
-) {
-    // Estas variables conservan los datos que vienen del backend
-    var paradaPartidaId by remember(data) { mutableStateOf(data.paradaPartidaId?.toString() ?: "") }
-    var paradaLlegadaId by remember(data) { mutableStateOf(data.paradaLlegadaId?.toString() ?: "") }
-
-    var horaTermino by remember { mutableStateOf("") }
-    var kmFinal by remember { mutableStateOf("") }
-    var pasajeros by remember(data) { mutableStateOf(data.numeroPasajeros?.toString() ?: "") }
-    var observaciones by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Nuevo Tramo: ${data.progreso ?: ""}") },
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                    modifier = Modifier.fillMaxWidth()
+        Box(Modifier.fillMaxSize().padding(padding)) {
+            if (uiState.isLoading) {
+                CircularProgressIndicator(Modifier.align(Alignment.Center))
+            } else if (uiState.segments.isEmpty()) {
+                Text("No hay tramos registrados", Modifier.align(Alignment.Center), color = Color.Gray)
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Column(Modifier.padding(12.dp)) {
-                        // ORIGEN
-                        val origenTexto = data.paradaPartidaNombre ?: "ID $paradaPartidaId"
-                        Text("De: $origenTexto", fontWeight = FontWeight.Bold)
-
-                        // LLEGADA (Visualización solamente)
-                        if (data.paradaLlegadaId != null) {
-                            val llegadaTexto = data.paradaLlegadaNombre ?: "ID ${data.paradaLlegadaId}"
-                            Text("A: $llegadaTexto", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                        }
-
-                        HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSecondaryContainer.copy(0.2f))
-
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Salida: ${data.horaSalida ?: "--:-- "}", style = MaterialTheme.typography.bodySmall)
-                            Text("KM Inicial: ${data.kmInicial ?: 0.0}", style = MaterialTheme.typography.bodySmall)
-                        }
+                    itemsIndexed(uiState.segments) { index, segment ->
+                        ServiceItemCard(segment = segment, index = index)
                     }
                 }
-
-                // INPUT: ID PARTIDA (Solo se muestra si el backend NO mandó el ID)
-                if (data.paradaPartidaId == null) {
-                    OutlinedTextField(
-                        value = paradaPartidaId,
-                        onValueChange = { paradaPartidaId = it },
-                        label = { Text("ID Origen (Requerido)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                // INPUT: ID LLEGADA (Solo se muestra si el backend NO mandó el ID)
-                // Si data.paradaLlegadaId ya tiene valor, este campo NO se dibuja, pero la variable 'paradaLlegadaId'
-                // ya tiene el valor correcto gracias al 'remember' del inicio.
-                if (data.paradaLlegadaId == null) {
-                    OutlinedTextField(
-                        value = paradaLlegadaId,
-                        onValueChange = { paradaLlegadaId = it },
-                        label = { Text("ID Llegada") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                // --- AQUI ELIMINÉ EL TEXTFIELD DUPLICADO QUE MOSTRABA "ID Parada Llegada" SIEMPRE ---
-
-                OutlinedTextField(
-                    value = horaTermino,
-                    onValueChange = { horaTermino = it },
-                    label = { Text("Hora Término (HH:mm)") },
-                    placeholder = { Text("07:45") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = kmFinal,
-                    onValueChange = { kmFinal = it },
-                    label = { Text("Kilometraje Final") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = pasajeros,
-                    onValueChange = { pasajeros = it },
-                    label = { Text("N° Pasajeros") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = observaciones,
-                    onValueChange = { observaciones = it },
-                    label = { Text("Observaciones") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 2
-                )
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    onConfirm(
-                        paradaPartidaId.toIntOrNull() ?: 0,
-                        paradaLlegadaId.toIntOrNull() ?: 0, // Aquí se usa el valor interno oculto
-                        horaTermino,
-                        kmFinal.toDoubleOrNull() ?: 0.0,
-                        pasajeros.toIntOrNull() ?: 0,
-                        observaciones
-                    )
-                },
-                // Validamos que exista un ID de partida para habilitar el botón
-                enabled = !isCreating && paradaPartidaId.isNotBlank()
-            ) {
-                if (isCreating) CircularProgressIndicator(Modifier.size(24.dp), color = Color.White)
-                else Text("Guardar")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
         }
-    )
+    }
 }
 
+// ===================== SHEET: PRÓXIMO =====================
+
 @Composable
-private fun LocationSection(
-    uiState: TripServicesUiState,
-    viewModel: TripServicesViewModel,
-    permissionsController: dev.icerock.moko.permissions.PermissionsController,
-    onNavigateToMap: (Double, Double) -> Unit
+private fun ProximoTramoSheet(
+    data: ProximoTramoDto,
+    isCreating: Boolean,
+    onSave: (String, Double, Int) -> Unit
 ) {
-    if (uiState.showGpsDialog) {
-        GpsDisabledDialog(
-            onDismiss = { viewModel.dismissGpsDialog() },
-            onConfirm = { viewModel.openLocationSettings() }
-        )
+    val currentTimeStr = remember {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        "${now.hour.toString().padStart(2, '0')}:${now.minute.toString().padStart(2, '0')}"
     }
 
-    when {
-        uiState.gpsDisabled -> {
-            GpsDisabledContent(
-                onRetry = { viewModel.retryLocationAfterSettings() }
-            )
-        }
-        uiState.permissionDenied -> {
-            PermissionDeniedContent(
-                onRetry = { viewModel.requestPermissionAndStartLocation(permissionsController) }
-            )
-        }
-        uiState.isLocationLoading -> {
-            Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator(Modifier.size(32.dp))
-                    Text("Obteniendo ubicación...", style = MaterialTheme.typography.bodySmall)
+    var horaFinal by remember { mutableStateOf(currentTimeStr) }
+    var kmFinal by remember { mutableStateOf(data.ultimoKilometraje?.let { if (it == it.toLong().toDouble()) it.toLong().toString() else it.toString() } ?: "") }
+    var numPasajeros by remember { mutableStateOf(data.ultimosPasajeros?.toString() ?: "") }
+
+    val lat = data.latitud?.toDoubleOrNull()
+    val lng = data.longitud?.toDoubleOrNull()
+    val tipoInfo = getTipoInfo(data.tipo)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 32.dp)
+    ) {
+        // Header
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Surface(color = tipoInfo.color.copy(alpha = 0.15f), shape = CircleShape, modifier = Modifier.size(44.dp)) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(tipoInfo.icon, null, tint = tipoInfo.color, modifier = Modifier.size(24.dp))
                 }
             }
-        }
-        uiState.currentLocation != null -> {
-            LocationCard(
-                location = uiState.currentLocation,
-                onSeeMap = {
-                    onNavigateToMap(
-                        uiState.currentLocation.latitude,
-                        uiState.currentLocation.longitude
-                    )
-                }
-            )
-        }
-    }
-}
-
-@Composable
-private fun LocationSectionCard(
-    title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit
-) {
-    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        border = if (!isDark) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null
-    ) {
-        Column {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = title.uppercase(),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            }
-            Column(modifier = Modifier.padding(16.dp)) {
-                content()
+            Spacer(Modifier.width(12.dp))
+            Column {
+                Text(data.nombreLugar ?: "Próximo tramo", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                Text(tipoInfo.label, style = MaterialTheme.typography.labelMedium, color = tipoInfo.color, fontWeight = FontWeight.SemiBold)
             }
         }
-    }
-}
 
-@Composable
-private fun PermissionDeniedContent(onRetry: () -> Unit) {
-    LocationSectionCard(
-        title = "Permiso Denegado",
-        icon = Icons.Filled.ErrorOutline
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                "Necesitamos acceso para ubicar tu seguimiento de ruta.",
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Button(onClick = onRetry) { Text("Conceder permiso") }
+        Spacer(Modifier.height(16.dp))
+
+        // Mapa (retrasado para no interrumpir animación)
+        var showMap by remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) {
+            delay(400)
+            showMap = true
         }
-    }
-}
 
-@Composable
-private fun GpsDisabledDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("GPS Desactivado") },
-        text = { Text("Activa los servicios de ubicación (GPS) en tu dispositivo.") },
-        confirmButton = { TextButton(onClick = onConfirm) { Text("Configuración") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
-    )
-}
-
-@Composable
-private fun GpsDisabledContent(onRetry: () -> Unit) {
-    LocationSectionCard(
-        title = "GPS Apagado",
-        icon = Icons.Filled.GpsOff
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                "No hay señal de GPS local.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Button(onClick = onRetry) { Text("Reintentar") }
-        }
-    }
-}
-
-@Composable
-private fun LocationCard(
-    location: org.rol.transportation.domain.model.LocationModel,
-    onSeeMap: () -> Unit
-) {
-    LocationSectionCard(
-        title = "Ubicación Actual",
-        icon = Icons.Filled.GpsFixed
-    ) {
-        Column(Modifier.fillMaxWidth()) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Column {
-                    Text("LATITUD", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                    Text("${location.latitude}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+        if (lat != null && lng != null) {
+            if (showMap) {
+                Box(Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(12.dp))) {
+                    MapView(latitude = lat, longitude = lng, title = data.nombreLugar ?: "Destino")
                 }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text("LONGITUD", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                    Text("${location.longitude}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            } else {
+                Box(Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(12.dp)).background(Color.LightGray.copy(alpha=0.3f)), contentAlignment=Alignment.Center) {
+                    CircularProgressIndicator()
                 }
             }
             Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = onSeeMap,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Ver en mapa")
+        }
+
+        // Datos anteriores
+        PreviousDataCard(
+            hora = data.ultimaHora,
+            km = data.ultimoKilometraje,
+            pasajeros = data.ultimosPasajeros
+        )
+
+        Spacer(Modifier.height(20.dp))
+
+        // Inputs
+        InputSection(
+            horaFinal = horaFinal, onHoraChange = { horaFinal = it },
+            kmFinal = kmFinal, onKmChange = { kmFinal = it },
+            numPasajeros = numPasajeros, onPaxChange = { numPasajeros = it }
+        )
+
+        Spacer(Modifier.height(20.dp))
+
+        SaveButton(
+            isCreating = isCreating,
+            enabled = horaFinal.isNotBlank(),
+            onClick = { 
+                val km = kmFinal.replace(",", ".").replace(" ", "").replace("\u00A0", "").toDoubleOrNull() ?: 0.0
+                onSave(horaFinal, km, numPasajeros.toIntOrNull() ?: 0) 
+            }
+        )
+    }
+}
+
+// ===================== SHEET: OCASIONAL =====================
+
+@Composable
+private fun OcasionalSheet(
+    proximoData: ProximoTramoDto?,
+    currentLocation: org.rol.transportation.domain.model.LocationModel?,
+    isCreating: Boolean,
+    onSave: (String, String, Double, Int) -> Unit
+) {
+    val currentTimeStr = remember {
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        "${now.hour.toString().padStart(2, '0')}:${now.minute.toString().padStart(2, '0')}"
+    }
+
+    var nombreLugar by remember { mutableStateOf("") }
+    var horaFinal by remember { mutableStateOf(currentTimeStr) }
+    var kmFinal by remember { mutableStateOf(proximoData?.ultimoKilometraje?.let { if (it == it.toLong().toDouble()) it.toLong().toString() else it.toString() } ?: "") }
+    var numPasajeros by remember { mutableStateOf(proximoData?.ultimosPasajeros?.toString() ?: "") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 32.dp)
+    ) {
+        // Header
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Surface(color = Color(0xFFFF9800).copy(alpha = 0.15f), shape = CircleShape, modifier = Modifier.size(44.dp)) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(Icons.Filled.PinDrop, null, tint = Color(0xFFFF9800), modifier = Modifier.size(24.dp))
+                }
+            }
+            Spacer(Modifier.width(12.dp))
+            Column {
+                Text("Parada Ocasional", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                Text("Parada no programada", style = MaterialTheme.typography.labelMedium, color = Color(0xFFFF9800), fontWeight = FontWeight.SemiBold)
             }
         }
+
+        Spacer(Modifier.height(16.dp))
+
+        // Mapa (retrasado para no interrumpir animación)
+        var showMap by remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) {
+            delay(400)
+            showMap = true
+        }
+
+        if (currentLocation != null) {
+            if (showMap) {
+                Box(Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(12.dp))) {
+                    MapView(latitude = currentLocation.latitude, longitude = currentLocation.longitude, title = "Mi ubicación")
+                }
+            } else {
+                Box(Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(12.dp)).background(Color.LightGray.copy(alpha=0.3f)), contentAlignment=Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+        }
+
+        // Datos anteriores
+        if (proximoData != null) {
+            PreviousDataCard(
+                hora = proximoData.ultimaHora,
+                km = proximoData.ultimoKilometraje,
+                pasajeros = proximoData.ultimosPasajeros
+            )
+            Spacer(Modifier.height(20.dp))
+        }
+
+        // Inputs
+        Text("REGISTRAR DATOS", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+        Spacer(Modifier.height(10.dp))
+
+        OutlinedTextField(
+            value = nombreLugar,
+            onValueChange = { nombreLugar = it },
+            label = { Text("Nombre del lugar *") },
+            placeholder = { Text("Ej: Grifo Primax km 45") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        Spacer(Modifier.height(10.dp))
+
+        InputSection(
+            horaFinal = horaFinal, onHoraChange = { horaFinal = it },
+            kmFinal = kmFinal, onKmChange = { kmFinal = it },
+            numPasajeros = numPasajeros, onPaxChange = { numPasajeros = it }
+        )
+
+        Spacer(Modifier.height(20.dp))
+
+        SaveButton(
+            isCreating = isCreating,
+            enabled = horaFinal.isNotBlank() && nombreLugar.isNotBlank(),
+            onClick = { 
+                val km = kmFinal.replace(",", ".").replace(" ", "").replace("\u00A0", "").toDoubleOrNull() ?: 0.0
+                onSave(nombreLugar, horaFinal, km, numPasajeros.toIntOrNull() ?: 0) 
+            }
+        )
+    }
+}
+
+// ===================== SHEET: DESCANSO =====================
+
+@Composable
+private fun DescansoSheet(
+    proximoData: ProximoTramoDto?,
+    isCreating: Boolean,
+    onSave: (String, Double, Int) -> Unit
+) {
+    var tiempoDescanso by remember { mutableStateOf("") }
+    val now = remember { Clock.System.now() }
+    val tz = remember { TimeZone.currentSystemDefault() }
+
+    val startDateTime = remember { now.toLocalDateTime(tz) }
+    val startStr = formatTime12h(startDateTime.hour, startDateTime.minute)
+
+    val endInstant = remember(tiempoDescanso) {
+        val mins = tiempoDescanso.toIntOrNull() ?: 0
+        now + mins.minutes
+    }
+    val endDateTime = remember(endInstant) { endInstant.toLocalDateTime(tz) }
+    val endStr = formatTime12h(endDateTime.hour, endDateTime.minute)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 32.dp)
+    ) {
+        // Header
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Surface(color = Color(0xFF795548).copy(alpha = 0.15f), shape = CircleShape, modifier = Modifier.size(44.dp)) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(Icons.Filled.Coffee, null, tint = Color(0xFF795548), modifier = Modifier.size(24.dp))
+                }
+            }
+            Spacer(Modifier.width(12.dp))
+            Column {
+                Text("Descanso", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                Text("Registro de descanso", style = MaterialTheme.typography.labelMedium, color = Color(0xFF795548), fontWeight = FontWeight.SemiBold)
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // Inputs SIMPLES
+        Text("TIEMPO DE DESCANSO", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color.Gray)
+        Spacer(Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = tiempoDescanso,
+            onValueChange = { tiempoDescanso = it },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            leadingIcon = {
+                Icon(Icons.Filled.Schedule, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(18.dp))
+            },
+            trailingIcon = {
+                Text("MIN", style = MaterialTheme.typography.labelSmall, color = Color.Gray, modifier = Modifier.padding(end = 16.dp))
+            },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            shape = RoundedCornerShape(12.dp)
+        )
+
+        Spacer(Modifier.height(24.dp))
+
+        // Label hora inicio y fin
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(startStr, style = MaterialTheme.typography.bodyMedium, color = Color.Gray, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.width(12.dp))
+            HorizontalDivider(modifier = Modifier.width(16.dp), color = Color.LightGray)
+            Spacer(Modifier.width(12.dp))
+            Text(endStr, style = MaterialTheme.typography.bodyMedium, color = Color.Gray, fontWeight = FontWeight.SemiBold)
+        }
+
+        Spacer(Modifier.height(32.dp))
+
+        SaveButton(
+            isCreating = isCreating,
+            enabled = tiempoDescanso.isNotBlank(),
+            onClick = {
+                val horaFinalStr = "${endDateTime.hour.toString().padStart(2, '0')}:${endDateTime.minute.toString().padStart(2, '0')}"
+                val km = proximoData?.ultimoKilometraje ?: 0.0
+                val pax = proximoData?.ultimosPasajeros ?: 0
+                onSave(horaFinalStr, km, pax)
+            }
+        )
+    }
+}
+
+// ===================== COMPONENTES REUTILIZABLES =====================
+
+@Composable
+private fun PreviousDataCard(hora: String?, km: Double?, pasajeros: Int?) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(Modifier.padding(14.dp)) {
+            Text(
+                "DATOS DEL TRAMO ANTERIOR",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(Modifier.height(10.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                InfoLabel("Hora", formatHora(hora))
+                InfoLabel("Kilometraje", if (km != null) "${formatKm(km)} KM" else "--")
+                InfoLabel("Pasajeros", "${pasajeros ?: 0}")
+            }
+        }
+    }
+}
+
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun InputSection(
+    horaFinal: String, onHoraChange: (String) -> Unit,
+    kmFinal: String, onKmChange: (String) -> Unit,
+    numPasajeros: String, onPaxChange: (String) -> Unit
+) {
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    if (showTimePicker) {
+        val initialHour = horaFinal.substringBefore(":").toIntOrNull() ?: 12
+        val initialMinute = horaFinal.substringAfter(":").toIntOrNull() ?: 0
+        val timePickerState = androidx.compose.material3.rememberTimePickerState(
+            initialHour = initialHour,
+            initialMinute = initialMinute,
+            is24Hour = true
+        )
+
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showTimePicker = false
+                    val formatted = "${timePickerState.hour.toString().padStart(2, '0')}:${timePickerState.minute.toString().padStart(2, '0')}"
+                    onHoraChange(formatted)
+                }) {
+                    Text("Aceptar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("Cancelar")
+                }
+            },
+            text = {
+                androidx.compose.material3.TimePicker(state = timePickerState)
+            }
+        )
+    }
+
+    Text("REGISTRAR DATOS ACTUALES", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+    Spacer(Modifier.height(10.dp))
+
+    Box(modifier = Modifier.fillMaxWidth().clickable { showTimePicker = true }) {
+        OutlinedTextField(
+            value = horaFinal,
+            onValueChange = {},
+            label = { Text("Hora de llegada (HH:mm) *") },
+            readOnly = true,
+            enabled = false,
+            colors = OutlinedTextFieldDefaults.colors(
+                disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                disabledBorderColor = MaterialTheme.colorScheme.outline,
+                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            trailingIcon = {
+                Icon(Icons.Filled.Schedule, contentDescription = "Seleccionar hora")
+            }
+        )
+    }
+    Spacer(Modifier.height(10.dp))
+
+    OutlinedTextField(
+        value = kmFinal,
+        onValueChange = onKmChange,
+        label = { Text("Kilometraje actual") },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true
+    )
+    Spacer(Modifier.height(10.dp))
+
+    OutlinedTextField(
+        value = numPasajeros,
+        onValueChange = onPaxChange,
+        label = { Text("N° de pasajeros") },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true
+    )
+}
+
+@Composable
+private fun SaveButton(isCreating: Boolean, enabled: Boolean, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().height(50.dp),
+        enabled = enabled && !isCreating,
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        if (isCreating) {
+            CircularProgressIndicator(Modifier.size(24.dp), color = Color.White)
+        } else {
+            Text("Guardar", fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun InfoLabel(label: String, value: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+        Spacer(Modifier.height(2.dp))
+        Text(value, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+    }
+}
+
+// ===================== CARD DEL SERVICIO =====================
+
+@Composable
+private fun ServiceItemCard(segment: SegmentDto, index: Int) {
+    val tipoInfo = getTipoInfo(segment.tipo)
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(color = tipoInfo.color.copy(alpha = 0.15f), shape = CircleShape, modifier = Modifier.size(40.dp)) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(tipoInfo.icon, segment.tipo, tint = tipoInfo.color, modifier = Modifier.size(22.dp))
+                }
+            }
+            Spacer(Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(segment.nombreLugar ?: "Sin nombre", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+                Spacer(Modifier.height(2.dp))
+                Text(tipoInfo.label, style = MaterialTheme.typography.labelSmall, color = tipoInfo.color, fontWeight = FontWeight.SemiBold)
+            }
+            Spacer(Modifier.width(8.dp))
+            Column(horizontalAlignment = Alignment.End) {
+                Text(formatHora(segment.horaFinal), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+                if (segment.kilometrajeFinal != null) {
+                    Text("${formatKm(segment.kilometrajeFinal)} KM", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                }
+                if (segment.numeroPasajeros != null) {
+                    Text("${segment.numeroPasajeros} pax", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                }
+            }
+        }
+    }
+}
+
+// ===================== HELPERS =====================
+
+private data class TipoInfo(
+    val label: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val color: Color
+)
+
+@Composable
+private fun getTipoInfo(tipo: String): TipoInfo {
+    return when (tipo.lowercase()) {
+        "origen" -> TipoInfo("Origen", Icons.Filled.PlayArrow, Color(0xFF4CAF50))
+        "destino" -> TipoInfo("Destino", Icons.Filled.Flag, Color(0xFFF44336))
+        "punto" -> TipoInfo("Punto de Control", Icons.Filled.LocationOn, Color(0xFF2196F3))
+        "parada" -> TipoInfo("Parada Ocasional", Icons.Filled.PinDrop, Color(0xFFFF9800))
+        "descanso" -> TipoInfo("Descanso", Icons.Filled.Coffee, Color(0xFF795548))
+        else -> TipoInfo(tipo.replaceFirstChar { it.uppercase() }, Icons.Filled.Place, Color.Gray)
+    }
+}
+
+private fun formatTime12h(hour24: Int, minute: Int): String {
+    val amPm = if (hour24 >= 12) "PM" else "AM"
+    val hour = when {
+        hour24 == 0 -> 12
+        hour24 > 12 -> hour24 - 12
+        else -> hour24
+    }
+    return "$hour:${minute.toString().padStart(2, '0')} $amPm"
+}
+
+private fun formatHora(isoDate: String?): String {
+    if (isoDate == null) return "--:--"
+    return try {
+        val timePart = isoDate.substringAfter("T").substringBefore("Z").substringBefore(".")
+        val parts = timePart.split(":")
+        if (parts.size >= 2) "${parts[0]}:${parts[1]}" else timePart
+    } catch (_: Exception) {
+        isoDate
+    }
+}
+
+private fun formatKm(km: Double): String {
+    return if (km == km.toLong().toDouble()) {
+        "%,d".format(km.toLong())
+    } else {
+        "%,.1f".format(km)
     }
 }

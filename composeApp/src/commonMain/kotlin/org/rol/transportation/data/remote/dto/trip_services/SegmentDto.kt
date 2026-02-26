@@ -6,17 +6,14 @@ import kotlinx.serialization.Serializable
 data class SegmentDto(
     val id: Int,
     val viajeId: Int,
-    val orden: Int,
-    val paradaPartidaId: Int,
-    val paradaPartidaNombre: String,
-    val paradaLlegadaId: Int?,
-    val paradaLlegadaNombre: String?,
-    val horaSalida: String,
-    val horaTermino: String?,
-    val kmInicial: Double,
-    val kmFinal: Double?,
-    val numeroPasajeros: Int?,
-    val observaciones: String?,
-    val kmServicio: Double? = null,
-    val tiempoServicioMinutos: Int? = null
+    val tipo: String,
+    val rutaParadaId: Int? = null,
+    val longitud: Double? = null,
+    val latitud: Double? = null,
+    val nombreLugar: String? = null,
+    val horaFinal: String? = null,
+    val kilometrajeFinal: Double? = null,
+    val numeroPasajeros: Int? = null,
+    val creadoEn: String? = null,
+    val actualizadoEn: String? = null
 )
