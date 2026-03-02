@@ -4,15 +4,14 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class NextStepDto(
-    val orden: Int,
-    val paradaPartidaId: Int? = null,
-    val paradaPartidaNombre: String? = null,
-    val paradaLlegadaId: Int? = null,
-    val paradaLlegadaNombre: String? = null,
-    val horaSalida: String? = null,
-    val kmInicial: Double? = null,
-    val numeroPasajeros: Int? = null,
-    val progreso: String? = null,
-    val isStart: Boolean? = null,
-    val isFinal: Boolean? = null
+    val tipo: String,
+    val nombreLugar: String? = null,
+    val latitud: String? = null,
+    val longitud: String? = null,
+    val ultimoKilometraje: Double? = null,
+    val ultimaHora: String? = null,
+    val ultimosPasajeros: Int? = null,
+    val esPuntoFijo: Boolean = false,
+    val rutaParadaId: Int? = null,
+    val faltanPuntosFijos: Boolean = false
 )

@@ -2,12 +2,18 @@ package org.rol.transportation.di
 
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
-import org.rol.transportation.domain.usecase.CreateSegmentUseCase
+import org.rol.transportation.domain.usecase.RegisterArrivalUseCase
+import org.rol.transportation.domain.usecase.RegisterDepartureUseCase
+import org.rol.transportation.domain.usecase.RegisterCheckpointUseCase
+import org.rol.transportation.domain.usecase.RegisterStopUseCase
+import org.rol.transportation.domain.usecase.RegisterRestUseCase
 import org.rol.transportation.domain.usecase.GetChecklistDocumentUseCase
 import org.rol.transportation.domain.usecase.GetDocumentInspectionUseCase
 import org.rol.transportation.domain.usecase.GetDriverDocumentsUseCase
 import org.rol.transportation.domain.usecase.GetFirstAidUseCase
 import org.rol.transportation.domain.usecase.GetInspectionSheetUseCase
+import org.rol.transportation.domain.usecase.UpdateSegmentUseCase
+import org.rol.transportation.domain.usecase.DeleteSegmentUseCase
 import org.rol.transportation.domain.usecase.GetLightsAlarmUseCase
 import org.rol.transportation.domain.usecase.GetNextStepUseCase
 import org.rol.transportation.domain.usecase.GetNotificationsUseCase
@@ -55,6 +61,12 @@ import org.rol.transportation.domain.usecase.GetLocationUseCase
 import org.rol.transportation.presentation.profile.ProfileViewModel
 
 
+import org.rol.transportation.presentation.home_trip_detail_services.register_arrival.RegisterArrivalViewModel
+import org.rol.transportation.presentation.home_trip_detail_services.register_departure.RegisterDepartureViewModel
+import org.rol.transportation.presentation.home_trip_detail_services.register_checkpoint.RegisterCheckpointViewModel
+import org.rol.transportation.presentation.home_trip_detail_services.register_stop.RegisterStopViewModel
+import org.rol.transportation.presentation.home_trip_detail_services.register_rest.RegisterRestViewModel
+
 val appModule = module {
     // Use Cases
     factory { LoginUseCase(get()) }
@@ -86,7 +98,13 @@ val appModule = module {
     factory { UpsertPassengersUseCase(get()) }
     factory { GetSegmentsUseCase(get()) }
     factory { GetNextStepUseCase(get()) }
-    factory { CreateSegmentUseCase(get()) }
+    factory { RegisterDepartureUseCase(get()) }
+    factory { RegisterArrivalUseCase(get()) }
+    factory { RegisterCheckpointUseCase(get()) }
+    factory { RegisterStopUseCase(get()) }
+    factory { RegisterRestUseCase(get()) }
+    factory { UpdateSegmentUseCase(get()) }
+    factory { DeleteSegmentUseCase(get()) }
     factory { VerifyTripChecklistUseCase(get()) }
     factory { GetDriverDocumentsUseCase(get(), get()) }
     factory { GetNotificationsUseCase(get(), get()) }
@@ -224,7 +242,53 @@ val appModule = module {
             tripId = parameters.get(),
             getSegmentsUseCase = get(),
             getNextStepUseCase = get(),
-            createSegmentUseCase = get(),
+            getLocationUseCase = get(),
+            updateSegmentUseCase = get(),
+            deleteSegmentUseCase = get()
+        )
+    }
+
+    viewModel { parameters ->
+        RegisterDepartureViewModel(
+            tripId = parameters.get(),
+            getNextStepUseCase = get(),
+            registerDepartureUseCase = get()
+            //getLocationUseCase = get()
+        )
+    }
+
+    viewModel { parameters ->
+        RegisterArrivalViewModel(
+            tripId = parameters.get(),
+            getNextStepUseCase = get(),
+            registerArrivalUseCase = get()
+            //getLocationUseCase = get()
+        )
+    }
+
+    viewModel { parameters ->
+        RegisterCheckpointViewModel(
+            tripId = parameters.get(),
+            getNextStepUseCase = get(),
+            registerCheckpointUseCase = get()
+            //getLocationUseCase = get()
+        )
+    }
+
+    viewModel { parameters ->
+        RegisterStopViewModel(
+            tripId = parameters.get(),
+            getNextStepUseCase = get(),
+            registerStopUseCase = get(),
+            getLocationUseCase = get()
+        )
+    }
+
+    viewModel { parameters ->
+        RegisterRestViewModel(
+            tripId = parameters.get(),
+            getNextStepUseCase = get(),
+            registerRestUseCase = get(),
             getLocationUseCase = get()
         )
     }

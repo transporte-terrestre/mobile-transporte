@@ -3,5 +3,5 @@ package org.rol.transportation.domain.usecase
 import org.rol.transportation.domain.repository.TripServicesRepository
 
 class GetNextStepUseCase(private val repository: TripServicesRepository) {
-    suspend operator fun invoke(tripId: Int) = repository.getNextStep(tripId)
+    suspend operator fun invoke(tripId: Int, tipo: String? = null) = repository.getNextStep(tripId, tipo)
 }

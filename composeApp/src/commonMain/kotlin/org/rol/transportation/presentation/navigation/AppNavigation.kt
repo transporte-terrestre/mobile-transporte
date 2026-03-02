@@ -4,6 +4,7 @@ package org.rol.transportation.presentation.navigation
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import org.koin.compose.koinInject
@@ -11,6 +12,7 @@ import org.rol.transportation.data.local.TokenManager
 import org.rol.transportation.presentation.checklist_document_inspection.DocumentInspectionScreen
 import org.rol.transportation.presentation.checklist_first_aid.FirstAidScreen
 import org.rol.transportation.presentation.checklist_inspection_sheet.InspectionSheetScreen
+import androidx.compose.ui.window.DialogProperties
 import org.rol.transportation.presentation.checklist_item_detail.ChecklistItemDetailScreen
 import org.rol.transportation.presentation.checklist_lights_alarm.LightsAlarmScreen
 import org.rol.transportation.presentation.checklist_seat_belts.SeatBeltsScreen
@@ -24,6 +26,11 @@ import org.rol.transportation.presentation.home_trip_detail.TripDetailScreen
 import org.rol.transportation.presentation.home_trip_detail_checklist.ChecklistScreen
 import org.rol.transportation.presentation.home_trip_detail_passenger.PassengerScreen
 import org.rol.transportation.presentation.home_trip_detail_services.TripServicesScreen
+import org.rol.transportation.presentation.home_trip_detail_services.register_arrival.RegisterArrivalScreen
+import org.rol.transportation.presentation.home_trip_detail_services.register_departure.RegisterDepartureScreen
+import org.rol.transportation.presentation.home_trip_detail_services.register_checkpoint.RegisterCheckpointScreen
+import org.rol.transportation.presentation.home_trip_detail_services.register_stop.RegisterStopScreen
+import org.rol.transportation.presentation.home_trip_detail_services.register_rest.RegisterRestScreen
 import org.rol.transportation.presentation.login.LoginScreen
 import org.rol.transportation.presentation.notifications.NotificationsScreen
 import org.rol.transportation.presentation.profile.ProfileScreen
@@ -124,7 +131,60 @@ fun AppNavigation() {
                 onNavigateBack = { navController.navigateUp() },
                 onNavigateToMap = { lat, lng ->
                     navController.navigate(Screen.Map(lat, lng))
+                },
+                onNavigateToRegisterLocation = { tipo ->
+                    when (tipo.lowercase()) {
+                        "origen" -> navController.navigate(Screen.RegisterDeparture(args.tripId))
+                        "destino" -> navController.navigate(Screen.RegisterArrival(args.tripId))
+                        "punto" -> navController.navigate(Screen.RegisterCheckpoint(args.tripId))
+                        "parada" -> navController.navigate(Screen.RegisterStop(args.tripId))
+                        "descanso" -> navController.navigate(Screen.RegisterRest(args.tripId))
+                    }
                 }
+            )
+        }
+
+        composable<Screen.RegisterDeparture> { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.RegisterDeparture>()
+            RegisterDepartureScreen(
+                tripId = args.tripId,
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        composable<Screen.RegisterArrival> { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.RegisterArrival>()
+            RegisterArrivalScreen(
+                tripId = args.tripId,
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        composable<Screen.RegisterCheckpoint> { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.RegisterCheckpoint>()
+            RegisterCheckpointScreen(
+                tripId = args.tripId,
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        dialog<Screen.RegisterStop>(
+            dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
+        ) { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.RegisterStop>()
+            RegisterStopScreen(
+                tripId = args.tripId,
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        dialog<Screen.RegisterRest>(
+            dialogProperties = DialogProperties(usePlatformDefaultWidth = false)
+        ) { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.RegisterRest>()
+            RegisterRestScreen(
+                tripId = args.tripId,
+                onNavigateBack = { navController.navigateUp() }
             )
         }
 

@@ -2,37 +2,34 @@ package org.rol.transportation.presentation.home_trip_detail_services
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.icerock.moko.permissions.DeniedAlwaysException
+import dev.icerock.moko.permissions.DeniedException
+import dev.icerock.moko.permissions.Permission
+import dev.icerock.moko.permissions.PermissionsController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.rol.transportation.data.remote.dto.trip_services.CreateSegmentRequest
-import org.rol.transportation.domain.usecase.CreateSegmentUseCase
+import org.rol.transportation.domain.usecase.DeleteSegmentUseCase
+import org.rol.transportation.domain.usecase.GetLocationUseCase
 import org.rol.transportation.domain.usecase.GetNextStepUseCase
 import org.rol.transportation.domain.usecase.GetSegmentsUseCase
+import org.rol.transportation.domain.usecase.UpdateSegmentUseCase
 import org.rol.transportation.utils.Resource
-import org.rol.transportation.domain.usecase.GetLocationUseCase
-import dev.icerock.moko.permissions.Permission
-import dev.icerock.moko.permissions.PermissionsController
-import kotlinx.coroutines.flow.catch
-import dev.icerock.moko.permissions.DeniedAlwaysException
-import dev.icerock.moko.permissions.DeniedException
 
 class TripServicesViewModel(
     private val tripId: Int,
     private val getSegmentsUseCase: GetSegmentsUseCase,
     private val getNextStepUseCase: GetNextStepUseCase,
-    private val createSegmentUseCase: CreateSegmentUseCase,
-    private val getLocationUseCase: GetLocationUseCase
+    private val getLocationUseCase: GetLocationUseCase,
+    private val deleteSegmentUseCase: DeleteSegmentUseCase,
+    private val updateSegmentUseCase: UpdateSegmentUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TripServicesUiState())
     val uiState: StateFlow<TripServicesUiState> = _uiState.asStateFlow()
-
-    init {
-        loadData()
-    }
 
     fun requestPermissionAndStartLocation(permissionsController: PermissionsController) {
         viewModelScope.launch {
@@ -57,7 +54,7 @@ class TripServicesViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLocationLoading = true, gpsDisabled = false, showGpsDialog = false) }
             getLocationUseCase()
-                .catch { e -> 
+                .catch { e ->
                     println("GPS_DEBUG: Exception capturada: ${e.message}")
                     _uiState.update { it.copy(error = e.message, isLocationLoading = false) }
                 }
@@ -91,39 +88,26 @@ class TripServicesViewModel(
         viewModelScope.launch {
             getSegmentsUseCase(tripId).collect { result ->
                 if (result is Resource.Success) {
-                    _uiState.update { it.copy(segments = result.data) }
+                    val segments = result.data ?: emptyList()
+                    val hasDestino = segments.any { it.tipo.lowercase() == "destino" }
+                    _uiState.update { it.copy(
+                        segments = segments,
+                        isAddButtonVisible = !hasDestino
+                    ) }
                 }
             }
+        }
+
+        viewModelScope.launch {
 
             getNextStepUseCase(tripId).collect { result ->
                 when (result) {
                     is Resource.Success -> {
                         val data = result.data
 
-                        val hasValidId = data.paradaPartidaId != null
-
-                        // Parsear "2/1", "1/1", "3/2", etc.
-                        val isOverflow = try {
-                            val parts = data.progreso?.split("/")
-                            if (parts?.size == 2) {
-                                val current = parts[0].toInt()
-                                val total = parts[1].toInt()
-                                // Si el paso actual (2) es mayor al total (1), es un desbordamiento.
-                                current > total
-                            } else {
-                                false
-                            }
-                        } catch (e: Exception) {
-                            false
-                        }
-
-                        // El botón solo se ve si hay ID válido Y NO nos hemos pasado del total
-                        val shouldShowButton = hasValidId && !isOverflow
-
                         _uiState.update {
                             it.copy(
-                                isAddButtonVisible = shouldShowButton,
-                                nextStepData = if (shouldShowButton) data else null,
+                                nextStepData = data,
                                 isLoading = false
                             )
                         }
@@ -153,42 +137,68 @@ class TripServicesViewModel(
         _uiState.update { it.copy(showDialog = false) }
     }
 
-    fun createSegment(
-        paradaPartidaId: Int,
-        paradaLlegadaId: Int,
-        horaTermino: String,
-        kmFinal: Double,
-        numeroPasajeros: Int,
-        observaciones: String
-    ) {
-        val nextStep = _uiState.value.nextStepData ?: return
+    // Se delegará a las nuevas pantallas el registro, por lo que creamos
+    // un flujo externo para capturar "createSuccess" usando notifySuccess()
+    fun notifySuccess(message: String) {
+        _uiState.update { it.copy(createSuccess = message, showDialog = false) }
+        loadData()
+    }
 
-        val request = CreateSegmentRequest(
-            paradaPartidaId = paradaPartidaId,
-            paradaLlegadaId = paradaLlegadaId,
-            horaSalida = nextStep.horaSalida ?: "00:00:00",
-            horaTermino = horaTermino,
-            kmInicial = nextStep.kmInicial ?: 0.0,
-            kmFinal = kmFinal,
-            numeroPasajeros = numeroPasajeros,
-            observaciones = observaciones
-        )
+    fun clearMessages() {
+        _uiState.update { it.copy(error = null, createSuccess = null) }
+    }
 
+    fun promptDeleteLastSegment() {
+        _uiState.update { it.copy(isDeletingSegment = true) }
+    }
+
+    fun dismissDeletePrompt() {
+        _uiState.update { it.copy(isDeletingSegment = false) }
+    }
+
+    fun deleteLastSegment() {
+        val lastSegment = _uiState.value.segments.lastOrNull() ?: return
+        _uiState.update { it.copy(isLoading = true, isDeletingSegment = false) }
         viewModelScope.launch {
-            createSegmentUseCase(tripId, request).collect { result ->
-                when(result) {
-                    is Resource.Loading -> _uiState.update { it.copy(isCreating = true) }
+            deleteSegmentUseCase(lastSegment.id).collect { result ->
+                when (result) {
                     is Resource.Success -> {
-                        _uiState.update { it.copy(isCreating = false, showDialog = false, createSuccess = "Tramo registrado correctamente") }
-                        loadData() // Recargar todo
+                        _uiState.update { it.copy(isLoading = false, createSuccess = "Tramo eliminado correctamente") }
+                        loadData()
                     }
-                    is Resource.Error -> _uiState.update { it.copy(isCreating = false, error = result.message) }
+                    is Resource.Error -> {
+                        _uiState.update { it.copy(isLoading = false, error = result.message) }
+                    }
+                    else -> {}
                 }
             }
         }
     }
 
-    fun clearMessages() {
-        _uiState.update { it.copy(error = null, createSuccess = null) }
+    fun openEditDialog(segment: org.rol.transportation.data.remote.dto.trip_services.SegmentDto) {
+        _uiState.update { it.copy(editingSegment = segment) }
+    }
+
+    fun closeEditDialog() {
+        _uiState.update { it.copy(editingSegment = null) }
+    }
+
+    fun updateSegment(request: org.rol.transportation.data.remote.dto.trip_services.UpdateSegmentRequest) {
+        val segment = _uiState.value.editingSegment ?: return
+        _uiState.update { it.copy(isLoading = true, editingSegment = null) }
+        viewModelScope.launch {
+            updateSegmentUseCase(segment.id, request).collect { result ->
+                when (result) {
+                    is Resource.Success -> {
+                        _uiState.update { it.copy(isLoading = false, createSuccess = "Tramo actualizado correctamente") }
+                        loadData()
+                    }
+                    is Resource.Error -> {
+                        _uiState.update { it.copy(isLoading = false, error = result.message) }
+                    }
+                    else -> {}
+                }
+            }
+        }
     }
 }

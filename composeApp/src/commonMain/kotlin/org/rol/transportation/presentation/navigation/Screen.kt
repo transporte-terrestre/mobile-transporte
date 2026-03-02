@@ -113,4 +113,19 @@ sealed class Screen {
 
     @Serializable
     data class Map(val latitude: Double, val longitude: Double) : Screen()
+
+    @Serializable
+    data class RegisterArrival(val tripId: Int) : Screen()
+
+    @Serializable
+    data class RegisterDeparture(val tripId: Int) : Screen()
+
+    @Serializable
+    data class RegisterCheckpoint(val tripId: Int) : Screen()
+
+    @Serializable
+    data class RegisterStop(val tripId: Int) : Screen()
+
+    @Serializable
+    data class RegisterRest(val tripId: Int) : Screen()
 }

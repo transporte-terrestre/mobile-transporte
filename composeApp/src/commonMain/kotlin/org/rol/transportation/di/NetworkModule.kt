@@ -25,6 +25,7 @@ val networkModule = module {
                     ignoreUnknownKeys = true
                     isLenient = true
                     prettyPrint = true
+                    explicitNulls = false
                 })
             }
 

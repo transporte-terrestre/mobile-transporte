@@ -16,5 +16,7 @@ data class TripServicesUiState (
     val showGpsDialog: Boolean = false,
     val gpsDisabled: Boolean = false,
     val permissionDenied: Boolean = false,
-    val isLocationLoading: Boolean = false
+    val isLocationLoading: Boolean = false,
+    val editingSegment: SegmentDto? = null,
+    val isDeletingSegment: Boolean = false
 )
