@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -20,10 +21,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.LocalCafe
 import androidx.compose.material.icons.filled.PauseCircleOutline
 import androidx.compose.material.icons.filled.Place
@@ -35,6 +38,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -68,6 +72,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 import org.rol.transportation.data.remote.dto.trip_services.SegmentDto
 import org.rol.transportation.presentation.home_trip_detail_services.components.EditSegmentDialog
+import org.rol.transportation.presentation.theme.YellowPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -304,10 +309,39 @@ fun SegmentCard(
                         style = MaterialTheme.typography.bodyMedium,
                         color = iconTintColor
                     )
+                    
+                    if (tipoLower != "descanso" && tipoLower != "destino") {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color.Black, // Fondo oscuro
+                            modifier = Modifier.wrapContentSize(),
+                            border = BorderStroke(1.dp, Color(0xFF333333)) // Pequeño borde para que no se pierda en el modo oscuro
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.People,
+                                    contentDescription = "Pasajeros",
+                                    tint = YellowPrimary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "${segment.numeroPasajeros ?: 0} pas",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = YellowPrimary
+                                )
+                            }
+                        }
+                    }
                 }
             }
             
-            // Right Side: Time, KM, Pax
+            // Right Side: Time, KM
             Column(horizontalAlignment = Alignment.End) {
                 val timeString = segment.horaFinal?.substringAfter("T")?.take(5) ?: "--:--"
                 Text(
@@ -320,11 +354,6 @@ fun SegmentCard(
                 if (tipoLower != "descanso") {
                     Text(
                         text = "${segment.kilometrajeFinal ?: 0.0} KM",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
-                    )
-                    Text(
-                        text = "${segment.numeroPasajeros ?: 0} pax",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray
                     )

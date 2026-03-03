@@ -21,7 +21,7 @@ import org.rol.transportation.utils.Constants
 class TripServicesApi (private val client: HttpClient) {
 
     suspend fun getTripSegments(tripId: Int): List<SegmentDto> {
-        return client.get("viaje/$tripId/servicios").body()
+        return client.get("viaje/$tripId/tramos").body()
     }
 
     // Parameter `tipo` is optional in the getNextStep API
@@ -67,14 +67,14 @@ class TripServicesApi (private val client: HttpClient) {
     }
 
     suspend fun updateSegment(segmentId: Int, request: UpdateSegmentRequest): SegmentDto {
-        return client.patch("viaje/servicio/update/$segmentId") {
+        return client.patch("viaje/tramo/update/$segmentId") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }.body()
     }
 
     suspend fun deleteSegment(segmentId: Int): SegmentDto {
-        return client.delete("viaje/servicio/delete/$segmentId").body()
+        return client.delete("viaje/tramo/delete/$segmentId").body()
     }
 
 }

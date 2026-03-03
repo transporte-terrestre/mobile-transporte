@@ -73,20 +73,18 @@ fun LocationRegistrationForm(
     buttonColor: Color,
     isEditablePlaceName: Boolean = false,
     onNavigateBack: () -> Unit,
-    onSubmit: (String, Double, Int, String) -> Unit
+    onSubmit: (String, Double, String) -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
     var fecha by remember { mutableStateOf("") }
     var hora by remember { mutableStateOf("") }
     var kilometraje by remember { mutableStateOf("") }
-    var pasajeros by remember { mutableStateOf("") }
 
     var nombreLugar by remember { mutableStateOf("") }
 
     LaunchedEffect(nextStepData) {
         if (nextStepData != null) {
             kilometraje = (nextStepData.ultimoKilometraje ?: 0.0).toString()
-            pasajeros = (nextStepData.ultimosPasajeros ?: 0).toString()
             if (nombreLugar.isBlank()) {
                 nombreLugar = nextStepData.nombreLugar ?: ""
             }
@@ -265,24 +263,14 @@ fun LocationRegistrationForm(
                 }
             }
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                OutlinedTextField(
-                    value = kilometraje,
-                    onValueChange = { kilometraje = it },
-                    label = { Text("KILOMETRAJE ACTUAL *") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.weight(1f),
-                    singleLine = true
-                )
-                OutlinedTextField(
-                    value = pasajeros,
-                    onValueChange = { pasajeros = it },
-                    label = { Text("N° PASAJEROS *") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.weight(1f),
-                    singleLine = true
-                )
-            }
+            OutlinedTextField(
+                value = kilometraje,
+                onValueChange = { kilometraje = it },
+                label = { Text("KILOMETRAJE ACTUAL *") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -292,7 +280,6 @@ fun LocationRegistrationForm(
                     onSubmit(
                         combinedDateTime,
                         kilometraje.toDoubleOrNull() ?: 0.0,
-                        pasajeros.toIntOrNull() ?: 0,
                         if (isEditablePlaceName) nombreLugar else (nextStepData?.nombreLugar ?: "Ubicación GPS desconocida")
                     )
                 },
@@ -304,7 +291,7 @@ fun LocationRegistrationForm(
                     containerColor = buttonColor,
                     contentColor = Color.White
                 ),
-                enabled = !isRegistering && currentLocation != null && kilometraje.isNotBlank() && pasajeros.isNotBlank() && (!isEditablePlaceName || nombreLugar.isNotBlank())
+                enabled = !isRegistering && currentLocation != null && kilometraje.isNotBlank() && (!isEditablePlaceName || nombreLugar.isNotBlank())
             ) {
                 if (isRegistering) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White, strokeWidth = 2.dp)

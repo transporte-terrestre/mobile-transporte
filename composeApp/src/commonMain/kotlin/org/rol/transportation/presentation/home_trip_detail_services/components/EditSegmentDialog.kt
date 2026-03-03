@@ -41,7 +41,6 @@ fun EditSegmentDialog(
     // Inicializar variables desde el segment
     var nombreLugar by remember { mutableStateOf(segment.nombreLugar ?: "") }
     var kilometraje by remember { mutableStateOf(segment.kilometrajeFinal?.toString() ?: "") }
-    var pasajeros by remember { mutableStateOf(segment.numeroPasajeros?.toString() ?: "") }
 
     var fecha by remember { mutableStateOf("") }
     var hora by remember { mutableStateOf("") }
@@ -67,10 +66,13 @@ fun EditSegmentDialog(
             Button(onClick = {
                 val finalHora = if (fecha.isNotEmpty() && hora.isNotEmpty()) "${fecha}T${hora}:00Z" else null
                 val req = UpdateSegmentRequest(
-                    nombreLugar = if (allowsNombreLugar) nombreLugar else null,
+                    tipo = segment.tipo,
+                    longitud = segment.longitud ?: 0.0,
+                    latitud = segment.latitud ?: 0.0,
+                    numeroPasajeros = segment.numeroPasajeros ?: 0,
+                    nombreLugar = if (allowsNombreLugar) nombreLugar else (segment.nombreLugar ?: ""),
                     horaFinal = finalHora,
-                    kilometrajeFinal = if (allowsKilometrajePasajeros) kilometraje.toDoubleOrNull() else null,
-                    numeroPasajeros = if (allowsKilometrajePasajeros) pasajeros.toIntOrNull() else null
+                    kilometrajeFinal = if (allowsKilometrajePasajeros) kilometraje.toDoubleOrNull() else (segment.kilometrajeFinal ?: 0.0)
                 )
                 onConfirm(req)
             }) {
@@ -141,13 +143,6 @@ fun EditSegmentDialog(
                         value = kilometraje,
                         onValueChange = { kilometraje = it },
                         label = { Text("Kilometraje") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = pasajeros,
-                        onValueChange = { pasajeros = it },
-                        label = { Text("Número de Pasajeros") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth()
                     )

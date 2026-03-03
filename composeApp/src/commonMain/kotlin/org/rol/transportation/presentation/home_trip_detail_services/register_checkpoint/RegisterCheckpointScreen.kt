@@ -29,8 +29,8 @@ fun RegisterCheckpointScreen(
         buttonText = "Registrar",
         buttonColor = Color(0xFF2196F3), // Azul
         onNavigateBack = onNavigateBack,
-        onSubmit = { horaActual, kilometraje, pasajeros, nombreLugar ->
-            viewModel.registerCheckpoint(horaActual, kilometraje, pasajeros, nombreLugar)
+        onSubmit = { horaActual, kilometraje, nombreLugar ->
+            viewModel.registerCheckpoint(horaActual, kilometraje, 0, nombreLugar)
         }
     )
 }

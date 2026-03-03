@@ -110,7 +110,6 @@ fun RegisterStopScreen(
     var nombreLugar by remember { mutableStateOf("") }
     var hora by remember { mutableStateOf("") }
     var kilometraje by remember { mutableStateOf("") }
-    var pasajeros by remember { mutableStateOf("0") }
 
     LaunchedEffect(Unit) {
         hora = DateFormatter.getCurrentHourAndMinute()
@@ -311,22 +310,6 @@ fun RegisterStopScreen(
                         cursorColor = Color(0xFFFFA000)
                     )
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = pasajeros,
-                    onValueChange = { pasajeros = it },
-                    label = { Text("N° de pasajeros", color = labelColor) },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFFFFA000),
-                        unfocusedBorderColor = inputBgColor,
-                        focusedTextColor = textColor,
-                        unfocusedTextColor = textColor,
-                        cursorColor = Color(0xFFFFA000)
-                    )
-                )
 
                 Spacer(modifier = Modifier.height(32.dp))
 
@@ -334,9 +317,8 @@ fun RegisterStopScreen(
                 Button(
                     onClick = {
                         val km = kilometraje.toDoubleOrNull() ?: 0.0
-                        val pax = pasajeros.toIntOrNull() ?: 0
                         val horaCompleta = DateFormatter.getFullDateTimeStringWithHour(hora)
-                        viewModel.registerStop(horaActual = horaCompleta, kilometrajeActual = km, cantidadPasajeros = pax, nombreLugar = nombreLugar)
+                        viewModel.registerStop(horaActual = horaCompleta, kilometrajeActual = km, cantidadPasajeros = 0, nombreLugar = nombreLugar)
                     },
                     modifier = Modifier
                         .fillMaxWidth()

@@ -30,8 +30,8 @@ fun RegisterDepartureScreen(
         buttonText = "Iniciar",
         buttonColor = Color(0xFF4CAF50), // Verde
         onNavigateBack = onNavigateBack,
-        onSubmit = { horaActual, kilometraje, pasajeros, nombreLugar ->
-            viewModel.registerDeparture(horaActual, kilometraje, pasajeros, nombreLugar)
+        onSubmit = { horaActual, kilometraje, nombreLugar ->
+            viewModel.registerDeparture(horaActual, kilometraje, 0, nombreLugar)
         }
     )
 }

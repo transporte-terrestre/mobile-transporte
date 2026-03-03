@@ -45,11 +45,18 @@ import org.rol.transportation.presentation.home_trip.components.TripCard
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    refreshTrigger: Long = 0L,
     onNavigateToTripDetail: (Int) -> Unit,
     onNavigateBack: () -> Unit,
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val tripsPagingItems = viewModel.tripsPagingFlow.collectAsLazyPagingItems()
+
+    androidx.compose.runtime.LaunchedEffect(refreshTrigger) {
+        if (refreshTrigger > 0) {
+            tripsPagingItems.refresh()
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,

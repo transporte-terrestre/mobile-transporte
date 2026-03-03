@@ -30,8 +30,8 @@ fun RegisterArrivalScreen(
         buttonText = "Terminar",
         buttonColor = Color(0xFFF44336), // Rojo
         onNavigateBack = onNavigateBack,
-        onSubmit = { horaActual, kilometraje, pasajeros, nombreLugar ->
-            viewModel.registerArrival(horaActual, kilometraje, pasajeros, nombreLugar)
+        onSubmit = { horaActual, kilometraje, nombreLugar ->
+            viewModel.registerArrival(horaActual, kilometraje, 0, nombreLugar)
         }
     )
 }

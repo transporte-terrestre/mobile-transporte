@@ -37,7 +37,7 @@ class HomeMenuViewModel : ViewModel() {
                 id = 2,
                 title = "Mi Programación",
                 icon = Icons.Default.Schedule,
-                route = Screen.Home,
+                route = Screen.Home(),
                 isEnabled = true
             ),
             MenuItem(

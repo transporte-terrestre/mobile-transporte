@@ -88,7 +88,8 @@ class TripServicesViewModel(
         viewModelScope.launch {
             getSegmentsUseCase(tripId).collect { result ->
                 if (result is Resource.Success) {
-                    val segments = result.data ?: emptyList()
+                    // Ordenamos por ID para mantener el orden cronológico de registro
+                    val segments = (result.data ?: emptyList()).sortedBy { it.id }
                     val hasDestino = segments.any { it.tipo.lowercase() == "destino" }
                     _uiState.update { it.copy(
                         segments = segments,

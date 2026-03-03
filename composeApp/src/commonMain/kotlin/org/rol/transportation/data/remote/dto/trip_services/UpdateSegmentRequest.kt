@@ -4,6 +4,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UpdateSegmentRequest(
+    val tipo: String? = null,
+    val longitud: Double? = null,
+    val latitud: Double? = null,
     val nombreLugar: String? = null,
     val horaFinal: String? = null,
     val kilometrajeFinal: Double? = null,

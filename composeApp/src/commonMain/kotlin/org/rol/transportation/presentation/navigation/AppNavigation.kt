@@ -86,13 +86,17 @@ fun AppNavigation() {
             )
         }
 
-        composable<Screen.Home> {
+        composable<Screen.Home> { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.Home>()
             HomeScreen(
+                refreshTrigger = args.refreshKey,
                 onNavigateToTripDetail = { tripId ->
                     navController.navigate(Screen.TripDetail(tripId))
                 },
                 onNavigateBack = {
-                    navController.navigate(Screen.HomeMenu)
+                    navController.navigate(Screen.HomeMenu) {
+                        popUpTo<Screen.HomeMenu> { inclusive = true }
+                    }
                 }
             )
         }
@@ -103,7 +107,13 @@ fun AppNavigation() {
             TripDetailScreen(
                 tripId = args.tripId,
                 refreshTrigger = args.refreshKey,
-                onNavigateBack = { navController.navigateUp() },
+                onNavigateBack = { 
+                    navController.popBackStack()
+                    val refreshKey = Clock.System.now().toEpochMilliseconds()
+                    navController.navigate(Screen.Home(refreshKey = refreshKey)) {
+                        popUpTo<Screen.Home> { inclusive = true }
+                    }
+                },
                 onNavigateToChecklist = { tripId, tipo, vehiculoId ->
                     navController.navigate(Screen.Checklist(tripId, tipo, vehiculoId))
                 },
@@ -120,7 +130,13 @@ fun AppNavigation() {
             val args = backStackEntry.toRoute<Screen.Passengers>()
             PassengerScreen(
                 tripId = args.tripId,
-                onNavigateBack = { navController.navigateUp() }
+                onNavigateBack = {
+                    navController.popBackStack()
+                    val refreshKey = Clock.System.now().toEpochMilliseconds()
+                    navController.navigate(Screen.TripDetail(tripId = args.tripId, refreshKey = refreshKey)) {
+                        popUpTo<Screen.TripDetail> { inclusive = true }
+                    }
+                }
             )
         }
 
@@ -128,7 +144,13 @@ fun AppNavigation() {
             val args = backStackEntry.toRoute<Screen.TripServices>()
             TripServicesScreen(
                 tripId = args.tripId,
-                onNavigateBack = { navController.navigateUp() },
+                onNavigateBack = { 
+                    navController.popBackStack()
+                    val refreshKey = Clock.System.now().toEpochMilliseconds()
+                    navController.navigate(Screen.TripDetail(tripId = args.tripId, refreshKey = refreshKey)) {
+                        popUpTo<Screen.TripDetail> { inclusive = true }
+                    }
+                },
                 onNavigateToMap = { lat, lng ->
                     navController.navigate(Screen.Map(lat, lng))
                 },
