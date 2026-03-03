@@ -2,24 +2,29 @@ package org.rol.transportation.domain.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import org.rol.transportation.data.remote.api.LightsAlarmApi
 import org.rol.transportation.data.remote.api.PassengerApi
-import org.rol.transportation.data.remote.dto.passenger.PassengerAttendanceDto
-import org.rol.transportation.data.remote.dto.passenger.PassengerUpsertRequest
+import org.rol.transportation.data.remote.dto.passenger.ScanDnisRequest
+import org.rol.transportation.data.remote.dto.passenger.ScanDnisResponse
 import org.rol.transportation.domain.model.Passenger
 import org.rol.transportation.utils.Resource
 
 class PassengerRepositoryImpl (private val api: PassengerApi) : PassengerRepository {
-    override suspend fun getPassengers(tripId: Int): Flow<Resource<List<Passenger>>> = flow {
+    override suspend fun getPassengers(tripId: Int, viajeTramoId: Int?): Flow<Resource<List<Passenger>>> = flow {
         try {
             emit(Resource.Loading)
-            val dtos = api.getPassengers(tripId)
+            val dtos = api.getPassengers(tripId, viajeTramoId)
             val domainList = dtos.map { dto ->
+                val p = dto.pasajero
+                val dniStr = p?.dni ?: dto.dni ?: ""
+                val nombres = p?.nombres ?: dto.nombres ?: ""
+                val apellidos = p?.apellidos ?: dto.apellidos ?: ""
+                
                 Passenger(
+                    id = dto.id ?: 0,
                     viajeId = tripId,
                     pasajeroId = dto.pasajeroId,
-                    dni = dto.pasajero?.dni ?: "",
-                    nombreCompleto = "${dto.pasajero?.nombres} ${dto.pasajero?.apellidos}",
+                    dni = dniStr,
+                    nombreCompleto = "$nombres $apellidos".trim(),
                     asistencia = dto.asistencia
                 )
             }
@@ -29,35 +34,22 @@ class PassengerRepositoryImpl (private val api: PassengerApi) : PassengerReposit
         }
     }
 
-    override suspend fun upsertPassengers(
+    override suspend fun scanDnis(
         tripId: Int,
-        passengers: List<Passenger>
-    ): Flow<Resource<List<Passenger>>> = flow {
+        viajeTramoId: Int,
+        urls: List<String>
+    ): Flow<Resource<ScanDnisResponse>> = flow {
         try {
             emit(Resource.Loading)
-            val requestDto = PassengerUpsertRequest(
-                pasajeros = passengers.map { p ->
-                    PassengerAttendanceDto(
-                        pasajeroId = p.pasajeroId,
-                        asistencia = p.asistencia
-                    )
-                }
-            )
-            val responseDtos = api.upsertPassengers(tripId, requestDto)
-
-            // Mapeamos la respuesta de vuelta a dominio
-            val domainList = responseDtos.map { dto ->
-                Passenger(
-                    viajeId = tripId,
-                    pasajeroId = dto.pasajeroId,
-                    dni = dto.pasajero?.dni ?: "",
-                    nombreCompleto = "${dto.pasajero?.nombres} ${dto.pasajero?.apellidos}",
-                    asistencia = dto.asistencia
-                )
+            val request = ScanDnisRequest(urls = urls)
+            val response = api.scanDnis(tripId, viajeTramoId, request)
+            if (response.exito) {
+                emit(Resource.Success(response))
+            } else {
+                emit(Resource.Error(response.mensaje))
             }
-            emit(Resource.Success(domainList))
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Error al guardar asistencia"))
+            emit(Resource.Error(e.message ?: "Error al escanear DNIs"))
         }
     }
 }

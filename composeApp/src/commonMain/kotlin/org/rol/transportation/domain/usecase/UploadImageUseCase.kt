@@ -10,8 +10,9 @@ class UploadImageUseCase(
 ) {
     suspend operator fun invoke(
         imageBytes: ByteArray,
-        fileName: String
+        fileName: String,
+        folder: String = "imagenes"
     ): Flow<Resource<StorageUploadResponse>> {
-        return repository.uploadImage(imageBytes, fileName)
+        return repository.uploadImage(imageBytes, fileName, folder)
     }
 }

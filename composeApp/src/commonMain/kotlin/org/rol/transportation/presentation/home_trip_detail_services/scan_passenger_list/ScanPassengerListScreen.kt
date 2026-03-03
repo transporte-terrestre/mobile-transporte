@@ -1,20 +1,9 @@
-package org.rol.transportation.presentation.home_trip_detail_passenger
+package org.rol.transportation.presentation.home_trip_detail_services.scan_passenger_list
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,26 +12,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.GroupOff
-import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Error
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.rounded.PhotoCamera
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -51,21 +25,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
-import org.rol.transportation.domain.model.Passenger
+import org.rol.transportation.presentation.home_trip_detail_passenger.PassengerRow
+import org.rol.transportation.presentation.theme.YellowPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PassengerScreen(
+fun ScanPassengerListScreen(
     tripId: Int,
+    viajeTramoId: Int,
     onNavigateBack: () -> Unit,
-    viewModel: PassengerViewModel = koinViewModel { parametersOf(tripId) }
+    onNavigateToScanCamera: () -> Unit,
+    viewModel: ScanPassengerListViewModel = koinViewModel { parametersOf(tripId, viajeTramoId) }
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isDark = isSystemInDarkTheme()
 
-    // Manejo de Diálogos (Igual que antes)
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.loadPassengers()
+    }
+
     if (uiState.successMessage != null) {
         AlertDialog(
             onDismissRequest = { viewModel.clearMessages(); onNavigateBack() },
@@ -108,51 +90,70 @@ fun PassengerScreen(
             when {
                 uiState.isLoading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
 
-                uiState.passengers.isEmpty() -> {
-                    Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(Icons.Default.GroupOff, null, Modifier.size(64.dp), tint = Color.Gray)
-                        Spacer(Modifier.height(16.dp))
-                        Text("No hay pasajeros asignados", color = Color.Gray)
-                    }
-                }
-
                 else -> {
                     Column(
                         Modifier
                             .verticalScroll(rememberScrollState())
                             .padding(16.dp)
                     ) {
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        // Scan Camera Button
+                        Button(
+                            onClick = onNavigateToScanCamera,
+                            modifier = Modifier.fillMaxWidth().height(60.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isDark) Color(0xFF1E293B) else Color(0xFF1F2937),
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
-                            Column {
-                                // --- CABECERA  ---
-                                val checkedCount = uiState.passengers.count { it.asistencia }
-                                val totalCount = uiState.passengers.size
+                            Icon(Icons.Rounded.PhotoCamera, null, tint = YellowPrimary)
+                            Spacer(Modifier.width(12.dp))
+                            Text("Tomar fotos de DNI", fontWeight = FontWeight.Bold, color = Color.White)
+                        }
 
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(MaterialTheme.colorScheme.secondaryContainer)
-                                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                        Spacer(Modifier.height(24.dp))
+
+                        if (uiState.passengers.isEmpty()) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(Icons.Default.GroupOff, null, Modifier.size(64.dp), tint = Color.Gray)
+                                Spacer(Modifier.height(16.dp))
+                                Text("No hay pasajeros en este tramo", color = Color.Gray)
+                            }
+                        } else {
+                            Text("Lista Actual", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                            Spacer(Modifier.height(8.dp))
+
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                            ) {
+                                Column {
+                                    // --- CABECERA  ---
+                                    val checkedCount = uiState.passengers.count { it.asistencia }
+                                    val totalCount = uiState.passengers.size
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
-                                            imageVector = Icons.Default.CheckCircle,
+                                            imageVector = Icons.Default.People,
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.primary,
                                             modifier = Modifier.size(20.dp)
                                         )
                                         Spacer(Modifier.width(8.dp))
                                         Text(
-                                            text = "Pasajeros que asistieron",
+                                            text = "Pasajeros",
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.primary
@@ -164,7 +165,7 @@ fun PassengerScreen(
                                         shape = CircleShape
                                     ) {
                                         Text(
-                                            text = "$checkedCount/$totalCount",
+                                            text = "$totalCount",
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onPrimary,
@@ -179,73 +180,19 @@ fun PassengerScreen(
                                 uiState.passengers.forEachIndexed { index, item ->
                                     PassengerRow(
                                         item = item,
-                                        isLastItem = index == uiState.passengers.size - 1
+                                        isLastItem = index == uiState.passengers.size - 1,
+                                        showAttendanceColor = false
                                     )
                                 }
                             }
                         }
-                        // Espacio extra
+                        } // Closing else
+                        
+                        // Extra space for bottomBar
                         Spacer(Modifier.height(80.dp))
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun PassengerRow(
-    item: Passenger,
-    isLastItem: Boolean,
-    showAttendanceColor: Boolean = true
-) {
-    Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val colorContainer = if (!showAttendanceColor || item.asistencia) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-            val colorOnContainer = if (!showAttendanceColor || item.asistencia) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-
-            // Avatar con iniciales
-            Surface(
-                shape = CircleShape,
-                color = colorContainer,
-                modifier = Modifier.size(40.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = item.nombreCompleto.take(1).uppercase(),
-                        fontWeight = FontWeight.Bold,
-                        color = colorOnContainer
-                    )
-                }
-            }
-
-            Spacer(Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = item.nombreCompleto,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "DNI: ${item.dni}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-        if (!isLastItem) {
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                thickness = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
-            )
         }
     }
 }

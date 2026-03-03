@@ -13,11 +13,12 @@ class StorageRepositoryImpl(
 
     override suspend fun uploadImage(
         imageBytes: ByteArray,
-        fileName: String
+        fileName: String,
+        folder: String
     ): Flow<Resource<StorageUploadResponse>> = flow {
         try {
             emit(Resource.Loading)
-            val response = storageApi.uploadImage(imageBytes, fileName)
+            val response = storageApi.uploadImage(imageBytes, fileName, folder)
             emit(Resource.Success(response.toDomain()))
         } catch (e: Exception) {
             emit(Resource.Error(e.message ?: "Error al subir la imagen"))

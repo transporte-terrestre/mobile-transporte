@@ -1,6 +1,7 @@
 package org.rol.transportation.presentation.home_trip_detail_services
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -81,6 +82,7 @@ fun TripServicesScreen(
     onNavigateBack: () -> Unit,
     onNavigateToMap: (Double, Double) -> Unit,
     onNavigateToRegisterLocation: (String) -> Unit,
+    onNavigateToScanPassengerList: (Int) -> Unit,
     viewModel: TripServicesViewModel = koinViewModel { parametersOf(tripId) }
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -231,7 +233,8 @@ fun TripServicesScreen(
                                 segment = segment,
                                 isDeletable = isLastElement,
                                 onEditClick = { viewModel.openEditDialog(segment) },
-                                onDeleteClick = { if (isLastElement) viewModel.promptDeleteLastSegment() }
+                                onDeleteClick = { if (isLastElement) viewModel.promptDeleteLastSegment() },
+                                onNavigateToScanPassengerList = onNavigateToScanPassengerList
                             )
                         }
                     }
@@ -246,7 +249,8 @@ fun SegmentCard(
     segment: SegmentDto,
     isDeletable: Boolean,
     onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onNavigateToScanPassengerList: (Int) -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
     val tipoLower = segment.tipo.lowercase()
@@ -315,7 +319,7 @@ fun SegmentCard(
                         Surface(
                             shape = RoundedCornerShape(8.dp),
                             color = Color.Black, // Fondo oscuro
-                            modifier = Modifier.wrapContentSize(),
+                            modifier = Modifier.clickable { onNavigateToScanPassengerList(segment.id) },
                             border = BorderStroke(1.dp, Color(0xFF333333)) // Pequeño borde para que no se pierda en el modo oscuro
                         ) {
                             Row(

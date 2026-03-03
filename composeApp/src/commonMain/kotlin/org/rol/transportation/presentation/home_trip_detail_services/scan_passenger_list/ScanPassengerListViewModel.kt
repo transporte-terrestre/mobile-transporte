@@ -1,4 +1,4 @@
-package org.rol.transportation.presentation.home_trip_detail_passenger
+package org.rol.transportation.presentation.home_trip_detail_services.scan_passenger_list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,21 +10,18 @@ import kotlinx.coroutines.launch
 import org.rol.transportation.domain.usecase.GetPassengersUseCase
 import org.rol.transportation.utils.Resource
 
-class PassengerViewModel(
+class ScanPassengerListViewModel(
     private val tripId: Int,
+    private val viajeTramoId: Int,
     private val getPassengersUseCase: GetPassengersUseCase
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(PassengerUiState())
-    val uiState: StateFlow<PassengerUiState> = _uiState.asStateFlow()
-
-    init {
-        loadPassengers()
-    }
+    private val _uiState = MutableStateFlow(ScanPassengerListUiState())
+    val uiState: StateFlow<ScanPassengerListUiState> = _uiState.asStateFlow()
 
     fun loadPassengers() {
         viewModelScope.launch {
-            getPassengersUseCase(tripId).collect { result ->
+            getPassengersUseCase(tripId, viajeTramoId).collect { result ->
                 when (result) {
                     is Resource.Loading -> _uiState.update { it.copy(isLoading = true, error = null) }
                     is Resource.Success -> _uiState.update {
@@ -35,8 +32,6 @@ class PassengerViewModel(
             }
         }
     }
-
-
 
     fun clearMessages() {
         _uiState.update { it.copy(error = null, successMessage = null) }

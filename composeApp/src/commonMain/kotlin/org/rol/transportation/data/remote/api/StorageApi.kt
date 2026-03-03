@@ -13,8 +13,8 @@ import org.rol.transportation.utils.Constants
 
 class StorageApi(private val client: HttpClient) {
 
-    suspend fun uploadImage(imageBytes: ByteArray, fileName: String): StorageUploadResponseDto {
-        return client.post("${Constants.STORAGE_ENDPOINT}?folder=imagenes") {
+    suspend fun uploadImage(imageBytes: ByteArray, fileName: String, folder: String = "imagenes"): StorageUploadResponseDto {
+        return client.post("${Constants.STORAGE_ENDPOINT}?folder=$folder") {
             setBody(
                 MultiPartFormDataContent(
                     formData {

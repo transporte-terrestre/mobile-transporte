@@ -1,20 +1,16 @@
 package org.rol.transportation.di
 
+
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
-import org.rol.transportation.domain.usecase.RegisterArrivalUseCase
-import org.rol.transportation.domain.usecase.RegisterDepartureUseCase
-import org.rol.transportation.domain.usecase.RegisterCheckpointUseCase
-import org.rol.transportation.domain.usecase.RegisterStopUseCase
-import org.rol.transportation.domain.usecase.RegisterRestUseCase
+import org.rol.transportation.domain.usecase.DeleteSegmentUseCase
 import org.rol.transportation.domain.usecase.GetChecklistDocumentUseCase
 import org.rol.transportation.domain.usecase.GetDocumentInspectionUseCase
 import org.rol.transportation.domain.usecase.GetDriverDocumentsUseCase
 import org.rol.transportation.domain.usecase.GetFirstAidUseCase
 import org.rol.transportation.domain.usecase.GetInspectionSheetUseCase
-import org.rol.transportation.domain.usecase.UpdateSegmentUseCase
-import org.rol.transportation.domain.usecase.DeleteSegmentUseCase
 import org.rol.transportation.domain.usecase.GetLightsAlarmUseCase
+import org.rol.transportation.domain.usecase.GetLocationUseCase
 import org.rol.transportation.domain.usecase.GetNextStepUseCase
 import org.rol.transportation.domain.usecase.GetNotificationsUseCase
 import org.rol.transportation.domain.usecase.GetPassengersUseCase
@@ -22,19 +18,25 @@ import org.rol.transportation.domain.usecase.GetSeatBeltsUseCase
 import org.rol.transportation.domain.usecase.GetSegmentsUseCase
 import org.rol.transportation.domain.usecase.GetSpillKitUseCase
 import org.rol.transportation.domain.usecase.GetToolsInspectionUseCase
+import org.rol.transportation.domain.usecase.ScanDnisPhotosUseCase
 import org.rol.transportation.domain.usecase.GetTripChecklistUseCase
 import org.rol.transportation.domain.usecase.GetTripDetailUseCase
 import org.rol.transportation.domain.usecase.GetTripsPagedUseCase
 import org.rol.transportation.domain.usecase.IsLoggedInUseCase
 import org.rol.transportation.domain.usecase.LoginUseCase
 import org.rol.transportation.domain.usecase.LogoutUseCase
+import org.rol.transportation.domain.usecase.RegisterArrivalUseCase
+import org.rol.transportation.domain.usecase.RegisterCheckpointUseCase
+import org.rol.transportation.domain.usecase.RegisterDepartureUseCase
+import org.rol.transportation.domain.usecase.RegisterRestUseCase
+import org.rol.transportation.domain.usecase.RegisterStopUseCase
+import org.rol.transportation.domain.usecase.UpdateSegmentUseCase
 import org.rol.transportation.domain.usecase.UploadImageUseCase
 import org.rol.transportation.domain.usecase.UpsertChecklistDocumentUseCase
 import org.rol.transportation.domain.usecase.UpsertDocumentInspectionUseCase
 import org.rol.transportation.domain.usecase.UpsertFirstAidUseCase
 import org.rol.transportation.domain.usecase.UpsertInspectionSheetUseCase
 import org.rol.transportation.domain.usecase.UpsertLightsAlarmUseCase
-import org.rol.transportation.domain.usecase.UpsertPassengersUseCase
 import org.rol.transportation.domain.usecase.UpsertSeatBeltsUseCase
 import org.rol.transportation.domain.usecase.UpsertSpillKitUseCase
 import org.rol.transportation.domain.usecase.UpsertToolsInspectionUseCase
@@ -55,17 +57,16 @@ import org.rol.transportation.presentation.home_trip_detail.TripDetailViewModel
 import org.rol.transportation.presentation.home_trip_detail_checklist.ChecklistViewModel
 import org.rol.transportation.presentation.home_trip_detail_passenger.PassengerViewModel
 import org.rol.transportation.presentation.home_trip_detail_services.TripServicesViewModel
+import org.rol.transportation.presentation.home_trip_detail_services.register_arrival.RegisterArrivalViewModel
+import org.rol.transportation.presentation.home_trip_detail_services.register_checkpoint.RegisterCheckpointViewModel
+import org.rol.transportation.presentation.home_trip_detail_services.register_departure.RegisterDepartureViewModel
+import org.rol.transportation.presentation.home_trip_detail_services.register_rest.RegisterRestViewModel
+import org.rol.transportation.presentation.home_trip_detail_services.register_stop.RegisterStopViewModel
+import org.rol.transportation.presentation.home_trip_detail_services.scan_passenger_list.ScanPassengerListViewModel
+import org.rol.transportation.presentation.home_trip_detail_services.scan_passenger_photo.ScanPassengerViewModel
 import org.rol.transportation.presentation.login.LoginViewModel
 import org.rol.transportation.presentation.notifications.NotificationsViewModel
-import org.rol.transportation.domain.usecase.GetLocationUseCase
 import org.rol.transportation.presentation.profile.ProfileViewModel
-
-
-import org.rol.transportation.presentation.home_trip_detail_services.register_arrival.RegisterArrivalViewModel
-import org.rol.transportation.presentation.home_trip_detail_services.register_departure.RegisterDepartureViewModel
-import org.rol.transportation.presentation.home_trip_detail_services.register_checkpoint.RegisterCheckpointViewModel
-import org.rol.transportation.presentation.home_trip_detail_services.register_stop.RegisterStopViewModel
-import org.rol.transportation.presentation.home_trip_detail_services.register_rest.RegisterRestViewModel
 
 val appModule = module {
     // Use Cases
@@ -86,6 +87,7 @@ val appModule = module {
     factory { UpsertDocumentInspectionUseCase(get()) }
     factory { GetLightsAlarmUseCase(get()) }
     factory { UpsertLightsAlarmUseCase(get()) }
+    factory { ScanDnisPhotosUseCase(get()) }
     factory { GetSeatBeltsUseCase(get()) }
     factory { UpsertSeatBeltsUseCase(get()) }
     factory { GetToolsInspectionUseCase(get()) }
@@ -95,7 +97,6 @@ val appModule = module {
     factory { GetSpillKitUseCase(get()) }
     factory { UpsertSpillKitUseCase(get()) }
     factory { GetPassengersUseCase(get()) }
-    factory { UpsertPassengersUseCase(get()) }
     factory { GetSegmentsUseCase(get()) }
     factory { GetNextStepUseCase(get()) }
     factory { RegisterDepartureUseCase(get()) }
@@ -142,8 +143,15 @@ val appModule = module {
     viewModel { parameters ->
         PassengerViewModel(
             tripId = parameters.get(),
-            getPassengersUseCase = get(),
-            upsertPassengersUseCase = get()
+            getPassengersUseCase = get()
+        )
+    }
+
+    viewModel { parameters ->
+        ScanPassengerListViewModel(
+            tripId = parameters[0],
+            viajeTramoId = parameters[1],
+            getPassengersUseCase = get()
         )
     }
 
@@ -291,6 +299,15 @@ val appModule = module {
             registerRestUseCase = get(),
             getLocationUseCase = get()
         )
+    }
+
+    viewModel { (tripId: Int, viajeTramoId: Int) -> 
+        ScanPassengerViewModel(
+            tripId = tripId, 
+            viajeTramoId = viajeTramoId, 
+            uploadImageUseCase = get(),
+            scanDnisPhotosUseCase = get()
+        ) 
     }
 
 }

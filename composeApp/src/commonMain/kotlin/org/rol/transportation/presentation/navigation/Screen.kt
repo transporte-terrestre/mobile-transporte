@@ -128,4 +128,10 @@ sealed class Screen {
 
     @Serializable
     data class RegisterRest(val tripId: Int) : Screen()
+
+    @Serializable
+    data class ScanPassengerPhoto(val tripId: Int, val viajeTramoId: Int) : Screen()
+
+    @Serializable
+    data class ScanPassengerList(val tripId: Int, val viajeTramoId: Int) : Screen()
 }

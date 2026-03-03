@@ -34,6 +34,8 @@ import org.rol.transportation.presentation.home_trip_detail_services.register_re
 import org.rol.transportation.presentation.login.LoginScreen
 import org.rol.transportation.presentation.notifications.NotificationsScreen
 import org.rol.transportation.presentation.profile.ProfileScreen
+import org.rol.transportation.presentation.home_trip_detail_services.scan_passenger_list.ScanPassengerListScreen
+import org.rol.transportation.presentation.home_trip_detail_services.scan_passenger_photo.ScanPassengerPhotoScreen
 import org.rol.transportation.presentation.map.MapScreen
 import kotlin.time.Clock
 
@@ -162,6 +164,21 @@ fun AppNavigation() {
                         "parada" -> navController.navigate(Screen.RegisterStop(args.tripId))
                         "descanso" -> navController.navigate(Screen.RegisterRest(args.tripId))
                     }
+                },
+                onNavigateToScanPassengerList = { viajeTramoId ->
+                    navController.navigate(Screen.ScanPassengerList(args.tripId, viajeTramoId))
+                }
+            )
+        }
+
+        composable<Screen.ScanPassengerList> { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.ScanPassengerList>()
+            ScanPassengerListScreen(
+                tripId = args.tripId,
+                viajeTramoId = args.viajeTramoId,
+                onNavigateBack = { navController.navigateUp() },
+                onNavigateToScanCamera = {
+                    navController.navigate(Screen.ScanPassengerPhoto(args.tripId, args.viajeTramoId))
                 }
             )
         }
@@ -206,6 +223,15 @@ fun AppNavigation() {
             val args = backStackEntry.toRoute<Screen.RegisterRest>()
             RegisterRestScreen(
                 tripId = args.tripId,
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
+        composable<Screen.ScanPassengerPhoto> { backStackEntry ->
+            val args = backStackEntry.toRoute<Screen.ScanPassengerPhoto>()
+            ScanPassengerPhotoScreen(
+                tripId = args.tripId,
+                viajeTramoId = args.viajeTramoId,
                 onNavigateBack = { navController.navigateUp() }
             )
         }

@@ -2,21 +2,18 @@ package org.rol.transportation.data.remote.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.client.request.patch
 import io.ktor.client.request.delete
-import io.ktor.client.request.setBody
+import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.request.patch
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import org.rol.transportation.data.remote.dto.passenger.PassengerAttendanceDto
-import org.rol.transportation.data.remote.dto.passenger.PassengerUpsertRequest
-import org.rol.transportation.data.remote.dto.trip_services.RegisterLocationRequest
 import org.rol.transportation.data.remote.dto.trip_services.NextStepDto
+import org.rol.transportation.data.remote.dto.trip_services.RegisterLocationRequest
 import org.rol.transportation.data.remote.dto.trip_services.SegmentDto
 import org.rol.transportation.data.remote.dto.trip_services.UpdateSegmentRequest
-import org.rol.transportation.utils.Constants
 
 class TripServicesApi (private val client: HttpClient) {
 
