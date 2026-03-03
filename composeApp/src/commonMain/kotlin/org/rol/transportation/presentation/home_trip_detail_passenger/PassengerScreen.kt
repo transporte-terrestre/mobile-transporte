@@ -59,8 +59,9 @@ import org.rol.transportation.domain.model.Passenger
 @Composable
 fun PassengerScreen(
     tripId: Int,
+    viajeTramoId: Int? = null,
     onNavigateBack: () -> Unit,
-    viewModel: PassengerViewModel = koinViewModel { parametersOf(tripId) }
+    viewModel: PassengerViewModel = koinViewModel { parametersOf(tripId, viajeTramoId) }
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isDark = isSystemInDarkTheme()
@@ -176,10 +177,20 @@ fun PassengerScreen(
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                 // --- FIN CABECERA ---
 
-                                uiState.passengers.forEachIndexed { index, item ->
+                                val sortedPassengers = uiState.passengers.sortedWith(
+                                    compareByDescending<Passenger> { 
+                                        when {
+                                            it.asistencia -> 3 // En lista general, todos los que asisten son verdes
+                                            else -> 1 // Gris
+                                        }
+                                    }.thenBy { it.nombreCompleto }
+                                )
+
+                                sortedPassengers.forEachIndexed { index, item ->
                                     PassengerRow(
                                         item = item,
-                                        isLastItem = index == uiState.passengers.size - 1
+                                        isLastItem = index == sortedPassengers.size - 1,
+                                        showBlueForOtherSegments = false
                                     )
                                 }
                             }
@@ -197,7 +208,8 @@ fun PassengerScreen(
 fun PassengerRow(
     item: Passenger,
     isLastItem: Boolean,
-    showAttendanceColor: Boolean = true
+    showAttendanceColor: Boolean = true,
+    showBlueForOtherSegments: Boolean = true
 ) {
     Column {
         Row(
@@ -206,8 +218,21 @@ fun PassengerRow(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val colorContainer = if (!showAttendanceColor || item.asistencia) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-            val colorOnContainer = if (!showAttendanceColor || item.asistencia) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+            val colorContainer = when {
+                item.asistencia && (item.esTramoActual || !showBlueForOtherSegments) -> Color(0xFFE8F5E9) // Verde
+                item.asistencia -> Color(0xFFE3F2FD) // Azul/Celeste (Otro tramo)
+                else -> Color(0xFFF5F5F5) // Gris (Pendiente)
+            }
+            val colorOnContainer = when {
+                item.asistencia && (item.esTramoActual || !showBlueForOtherSegments) -> Color(0xFF2E7D32)
+                item.asistencia -> Color(0xFF1976D2)
+                else -> Color(0xFF757575)
+            }
+            val textColor = when {
+                item.asistencia && (item.esTramoActual || !showBlueForOtherSegments) -> Color(0xFF2E7D32)
+                item.asistencia -> Color(0xFF1976D2)
+                else -> Color(0xFF616161)
+            }
 
             // Avatar con iniciales
             Surface(
@@ -218,7 +243,7 @@ fun PassengerRow(
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         text = item.nombreCompleto.take(1).uppercase(),
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         color = colorOnContainer
                     )
                 }
@@ -231,12 +256,12 @@ fun PassengerRow(
                     text = item.nombreCompleto,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = textColor
                 )
                 Text(
                     text = "DNI: ${item.dni}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = textColor.copy(alpha = 0.7f)
                 )
             }
         }

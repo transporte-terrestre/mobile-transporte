@@ -6,5 +6,6 @@ data class Passenger(
     val pasajeroId: Int?,
     val dni: String,
     val nombreCompleto: String,
-    val asistencia: Boolean
+    val asistencia: Boolean,
+    val esTramoActual: Boolean
 )

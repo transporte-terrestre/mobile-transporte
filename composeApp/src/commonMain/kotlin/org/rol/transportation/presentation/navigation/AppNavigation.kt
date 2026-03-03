@@ -132,6 +132,7 @@ fun AppNavigation() {
             val args = backStackEntry.toRoute<Screen.Passengers>()
             PassengerScreen(
                 tripId = args.tripId,
+                viajeTramoId = args.viajeTramoId,
                 onNavigateBack = {
                     navController.popBackStack()
                     val refreshKey = Clock.System.now().toEpochMilliseconds()

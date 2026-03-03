@@ -12,6 +12,7 @@ import org.rol.transportation.utils.Resource
 
 class PassengerViewModel(
     private val tripId: Int,
+    private val viajeTramoId: Int?,
     private val getPassengersUseCase: GetPassengersUseCase
 ) : ViewModel() {
 
@@ -24,7 +25,7 @@ class PassengerViewModel(
 
     fun loadPassengers() {
         viewModelScope.launch {
-            getPassengersUseCase(tripId).collect { result ->
+            getPassengersUseCase(tripId, viajeTramoId).collect { result ->
                 when (result) {
                     is Resource.Loading -> _uiState.update { it.copy(isLoading = true, error = null) }
                     is Resource.Success -> _uiState.update {

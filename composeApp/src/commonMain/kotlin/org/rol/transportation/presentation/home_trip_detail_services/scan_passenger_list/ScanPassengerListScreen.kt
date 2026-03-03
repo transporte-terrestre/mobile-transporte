@@ -177,10 +177,20 @@ fun ScanPassengerListScreen(
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                 // --- FIN CABECERA ---
 
-                                uiState.passengers.forEachIndexed { index, item ->
+                                val sortedPassengers = uiState.passengers.sortedWith(
+                                    compareByDescending<org.rol.transportation.domain.model.Passenger> { 
+                                        when {
+                                            it.asistencia && it.esTramoActual -> 3 // Verde
+                                            it.asistencia -> 2 // Azul
+                                            else -> 1 // Gris
+                                        }
+                                    }.thenBy { it.nombreCompleto }
+                                )
+
+                                sortedPassengers.forEachIndexed { index, item ->
                                     PassengerRow(
                                         item = item,
-                                        isLastItem = index == uiState.passengers.size - 1,
+                                        isLastItem = index == sortedPassengers.size - 1,
                                         showAttendanceColor = false
                                     )
                                 }

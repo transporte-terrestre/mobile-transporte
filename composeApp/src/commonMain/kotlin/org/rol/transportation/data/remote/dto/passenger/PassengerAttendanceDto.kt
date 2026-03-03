@@ -11,5 +11,7 @@ data class PassengerAttendanceDto(
     val nombres: String? = null,
     val apellidos: String? = null,
     val asistencia: Boolean,
-    val pasajero: PassengerDto? = null
+    val paradaAsistenciaId: Int? = null,
+    val paradaAsistenciaNombre: String? = null,
+    val esTramoActual: Boolean? = null
 )

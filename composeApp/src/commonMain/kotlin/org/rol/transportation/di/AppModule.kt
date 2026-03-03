@@ -143,6 +143,7 @@ val appModule = module {
     viewModel { parameters ->
         PassengerViewModel(
             tripId = parameters.get(),
+            viajeTramoId = parameters.getOrNull(),
             getPassengersUseCase = get()
         )
     }

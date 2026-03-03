@@ -14,10 +14,9 @@ class PassengerRepositoryImpl (private val api: PassengerApi) : PassengerReposit
             emit(Resource.Loading)
             val dtos = api.getPassengers(tripId, viajeTramoId)
             val domainList = dtos.map { dto ->
-                val p = dto.pasajero
-                val dniStr = p?.dni ?: dto.dni ?: ""
-                val nombres = p?.nombres ?: dto.nombres ?: ""
-                val apellidos = p?.apellidos ?: dto.apellidos ?: ""
+                val dniStr = dto.dni ?: ""
+                val nombres = dto.nombres ?: ""
+                val apellidos = dto.apellidos ?: ""
                 
                 Passenger(
                     id = dto.id ?: 0,
@@ -25,7 +24,8 @@ class PassengerRepositoryImpl (private val api: PassengerApi) : PassengerReposit
                     pasajeroId = dto.pasajeroId,
                     dni = dniStr,
                     nombreCompleto = "$nombres $apellidos".trim(),
-                    asistencia = dto.asistencia
+                    asistencia = dto.asistencia,
+                    esTramoActual = dto.esTramoActual ?: false
                 )
             }
             emit(Resource.Success(domainList))

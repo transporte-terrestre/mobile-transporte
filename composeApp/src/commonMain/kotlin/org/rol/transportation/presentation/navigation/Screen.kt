@@ -29,7 +29,7 @@ sealed class Screen {
     data object Notifications : Screen()
 
     @Serializable
-    data class Passengers(val tripId: Int) : Screen()
+    data class Passengers(val tripId: Int, val viajeTramoId: Int? = null) : Screen()
 
     @Serializable
     data class TripServices(val tripId: Int) : Screen()
