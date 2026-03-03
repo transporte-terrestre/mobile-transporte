@@ -6,7 +6,6 @@ import org.rol.transportation.presentation.navigation.AppNavigation
 import org.rol.transportation.presentation.theme.TransportationTheme
 import org.rol.transportation.utils.SetStatusBarColor
 
-
 @Composable
 fun App() {
 
