@@ -154,15 +154,6 @@ fun ProfileScreen(
                 uiState.licenseDriver?.let {
                     InfoLabel(label = "LICENCIA", value = it)
                 }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                uiState.token?.let {
-                    InfoLabel(
-                        label = "TOKEN (primeros 30 caracteres)",
-                        value = "${it.take(30)}..."
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(40.dp))

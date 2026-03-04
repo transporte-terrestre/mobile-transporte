@@ -19,6 +19,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.FolderOff
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -48,6 +50,7 @@ import org.rol.transportation.domain.model.driver_documents.DriverDocument
 fun DriverDocumentsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToPdf: (url: String, title: String) -> Unit,
+    onNavigateToImage: (url: String, title: String) -> Unit,
     viewModel: DriverDocumentsViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -86,6 +89,33 @@ fun DriverDocumentsScreen(
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.align(Alignment.Center).padding(16.dp)
                 )
+            } else if (state.documents.isEmpty()) {
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FolderOff,
+                        contentDescription = "Sin documentos",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(72.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "No tienes documentos asociados",
+                        color = Color.Gray,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Cuando te asignen documentos, aparecerán aquí.",
+                        color = Color.Gray,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -97,9 +127,14 @@ fun DriverDocumentsScreen(
                             document = document,
                             onClick = {
                                 if (document.url.isNotEmpty()) {
-                                    // PDFs van al viewer, otros archivos abren en browser
+                                    val isImage = document.url.endsWith(".jpg", ignoreCase = true) ||
+                                            document.url.endsWith(".jpeg", ignoreCase = true) ||
+                                            document.url.endsWith(".png", ignoreCase = true)
+
                                     if (document.url.endsWith(".pdf", ignoreCase = true)) {
                                         onNavigateToPdf(document.url, document.nombre)
+                                    } else if (isImage) {
+                                        onNavigateToImage(document.url, document.nombre)
                                     } else {
                                         uriHandler.openUri(document.url)
                                     }
@@ -134,9 +169,16 @@ fun DocumentItem(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val isImage = document.url.endsWith(".jpg", ignoreCase = true) ||
+                    document.url.endsWith(".jpeg", ignoreCase = true) ||
+                    document.url.endsWith(".png", ignoreCase = true)
+
             Icon(
-                imageVector = if (document.url.endsWith(".pdf", ignoreCase = true)) 
-                    Icons.Default.PictureAsPdf else Icons.Default.Description,
+                imageVector = when {
+                    document.url.endsWith(".pdf", ignoreCase = true) -> Icons.Default.PictureAsPdf
+                    isImage -> Icons.Default.Image
+                    else -> Icons.Default.Description
+                },
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(40.dp)
