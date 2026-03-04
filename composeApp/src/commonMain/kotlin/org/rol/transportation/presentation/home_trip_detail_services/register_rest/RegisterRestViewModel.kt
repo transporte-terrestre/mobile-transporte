@@ -7,10 +7,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.rol.transportation.utils.AppEventBus
 import org.rol.transportation.data.remote.dto.trip_services.RegisterLocationRequest
 import org.rol.transportation.domain.usecase.GetLocationUseCase
 import org.rol.transportation.domain.usecase.GetNextStepUseCase
+import kotlinx.datetime.Clock
 import org.rol.transportation.domain.usecase.RegisterRestUseCase
 import org.rol.transportation.utils.Resource
 
@@ -29,11 +32,17 @@ class RegisterRestViewModel(
     }
 
     private fun loadData() {
-        _uiState.update { it.copy(isLoading = true, error = null) }
+        if (_uiState.value.nextStepData == null) {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+        }
+        val start = kotlin.time.Clock.System.now().toEpochMilliseconds()
+        println("ROLC_TAG: [RegisterRestViewModel] Fetching getNextStepUseCase(descanso)...")
         viewModelScope.launch {
             getNextStepUseCase(tripId, "descanso").collect { result ->
                 when (result) {
                     is Resource.Success -> {
+                        val duration = kotlin.time.Clock.System.now().toEpochMilliseconds() - start
+                        println("ROLC_TAG: [RegisterRestViewModel] getNextStepUseCase demoró ${duration}ms")
                         _uiState.update { it.copy(nextStepData = result.data, isLoading = false) }
                     }
                     is Resource.Error -> {
@@ -54,13 +63,24 @@ class RegisterRestViewModel(
     }
 
     private fun startLocationUpdates() {
+        println("ROLC_TAG: [RegisterRestViewModel] startLocationUpdates()...")
+        val startLoc = kotlin.time.Clock.System.now().toEpochMilliseconds()
         viewModelScope.launch {
             _uiState.update { it.copy(isLocationLoading = true, gpsDisabled = false, showGpsDialog = false) }
+            
+            val lastLocation = getLocationUseCase.getLastKnown()
+            if (lastLocation != null) {
+                println("ROLC_TAG: [RegisterRestViewModel] Se usó getLastKnown Location en ${kotlin.time.Clock.System.now().toEpochMilliseconds() - startLoc}ms")
+                _uiState.update { it.copy(currentLocation = lastLocation, isLocationLoading = false) }
+            }
+
             getLocationUseCase()
                 .catch { e ->
+                    println("ROLC_TAG: [RegisterRestViewModel] startLocationUpdates error")
                     _uiState.update { it.copy(error = e.message, isLocationLoading = false) }
                 }
                 .collect { location ->
+                    println("ROLC_TAG: [RegisterRestViewModel] startLocationUpdates Update fino GPS")
                     _uiState.update { it.copy(currentLocation = location, isLocationLoading = false) }
                 }
         }
@@ -104,16 +124,13 @@ class RegisterRestViewModel(
             nombreLugar = nombreLugar
         )
 
-        viewModelScope.launch {
+        _uiState.update { it.copy(isRegistering = true, successMessage = "Guardando descanso...", error = null) }
+
+        GlobalScope.launch {
             registerRestUseCase(tripId, request).collect { result ->
                 when(result) {
-                    is Resource.Loading -> _uiState.update { it.copy(isRegistering = true, error = null) }
-                    is Resource.Success -> {
-                        _uiState.update { it.copy(isRegistering = false, successMessage = "Descanso registrado correctamente") }
-                    }
-                    is Resource.Error -> {
-                        _uiState.update { it.copy(isRegistering = false, error = result.message) }
-                    }
+                    is Resource.Success -> AppEventBus.triggerReload()
+                    else -> {}
                 }
             }
         }

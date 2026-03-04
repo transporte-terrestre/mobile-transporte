@@ -6,5 +6,6 @@ import androidx.compose.runtime.Composable
 expect fun MapView(
     latitude: Double,
     longitude: Double,
-    title: String
+    title: String,
+    isLiteMode: Boolean = false
 )

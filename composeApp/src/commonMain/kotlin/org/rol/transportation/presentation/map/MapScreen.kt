@@ -57,10 +57,11 @@ fun MapScreen(
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            MapView(
+            MapViewWithLoading(
                 latitude = latitude,
                 longitude = longitude,
-                title = "Mi ubicación"
+                title = "Mi ubicación",
+                modifier = Modifier.fillMaxSize()
             )
         }
     }

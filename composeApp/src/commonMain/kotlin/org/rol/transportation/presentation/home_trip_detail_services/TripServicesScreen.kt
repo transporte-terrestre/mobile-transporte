@@ -22,24 +22,21 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.LocalCafe
 import androidx.compose.material.icons.filled.PauseCircleOutline
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -99,17 +96,6 @@ fun TripServicesScreen(
 
     LaunchedEffect(Unit) {
         viewModel.requestPermissionAndStartLocation(permissionsController)
-    }
-
-    // Manejo de Mensajes (Toast/Dialog)
-    if (uiState.createSuccess != null) {
-        AlertDialog(
-            onDismissRequest = { viewModel.clearMessages() },
-            icon = { Icon(Icons.Rounded.CheckCircle, null, tint = MaterialTheme.colorScheme.primary) },
-            title = { Text("Éxito") },
-            text = { Text(uiState.createSuccess!!) },
-            confirmButton = { Button(onClick = { viewModel.clearMessages() }) { Text("OK") } }
-        )
     }
 
     if (uiState.editingSegment != null) {

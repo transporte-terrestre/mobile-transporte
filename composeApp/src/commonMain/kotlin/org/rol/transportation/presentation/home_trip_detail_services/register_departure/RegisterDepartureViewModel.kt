@@ -6,7 +6,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.rol.transportation.utils.AppEventBus
 import org.rol.transportation.data.remote.dto.trip_services.RegisterLocationRequest
 import org.rol.transportation.domain.model.LocationModel
 import org.rol.transportation.domain.usecase.GetNextStepUseCase
@@ -27,7 +29,9 @@ class RegisterDepartureViewModel(
     }
 
     private fun loadData() {
-        _uiState.update { it.copy(isLoading = true, error = null) }
+        if (_uiState.value.nextStepData == null) {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+        }
         viewModelScope.launch {
             getNextStepUseCase(tripId, "origen").collect { result ->
                 when (result) {
@@ -77,16 +81,13 @@ class RegisterDepartureViewModel(
             rutaParadaId = nextStep.rutaParadaId
         )
 
-        viewModelScope.launch {
+        _uiState.update { it.copy(isRegistering = true, successMessage = "Iniciando viaje...", error = null) }
+
+        GlobalScope.launch {
             registerDepartureUseCase(tripId, request).collect { result ->
                 when(result) {
-                    is Resource.Loading -> _uiState.update { it.copy(isRegistering = true, error = null) }
-                    is Resource.Success -> {
-                        _uiState.update { it.copy(isRegistering = false, successMessage = "Salida registrada correctamente") }
-                    }
-                    is Resource.Error -> {
-                        _uiState.update { it.copy(isRegistering = false, error = result.message) }
-                    }
+                    is Resource.Success -> AppEventBus.triggerReload()
+                    else -> {}
                 }
             }
         }

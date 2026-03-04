@@ -8,4 +8,5 @@ interface LocationRepository {
     suspend fun getLastLocation(): LocationModel?
     fun isLocationEnabled(): Boolean
     fun openLocationSettings()
+    fun stopUpdates()
 }

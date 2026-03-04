@@ -6,6 +6,7 @@ import dev.icerock.moko.permissions.DeniedAlwaysException
 import dev.icerock.moko.permissions.DeniedException
 import dev.icerock.moko.permissions.Permission
 import dev.icerock.moko.permissions.PermissionsController
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +18,7 @@ import org.rol.transportation.domain.usecase.GetLocationUseCase
 import org.rol.transportation.domain.usecase.GetNextStepUseCase
 import org.rol.transportation.domain.usecase.GetSegmentsUseCase
 import org.rol.transportation.domain.usecase.UpdateSegmentUseCase
+import org.rol.transportation.utils.AppEventBus
 import org.rol.transportation.utils.Resource
 
 class TripServicesViewModel(
@@ -30,6 +32,17 @@ class TripServicesViewModel(
 
     private val _uiState = MutableStateFlow(TripServicesUiState())
     val uiState: StateFlow<TripServicesUiState> = _uiState.asStateFlow()
+
+    private var segmentsJob: Job? = null
+    private var nextStepJob: Job? = null
+
+    init {
+        viewModelScope.launch {
+            AppEventBus.reloadTripServices.collect {
+                loadData()
+            }
+        }
+    }
 
     fun requestPermissionAndStartLocation(permissionsController: PermissionsController) {
         viewModelScope.launch {
@@ -83,9 +96,14 @@ class TripServicesViewModel(
     }
 
     fun loadData() {
-        _uiState.update { it.copy(isLoading = true, error = null) }
+        if (_uiState.value.segments.isEmpty()) {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+        } else {
+            _uiState.update { it.copy(error = null) } // Prevent showing full loader on resume
+        }
 
-        viewModelScope.launch {
+        segmentsJob?.cancel()
+        segmentsJob = viewModelScope.launch {
             getSegmentsUseCase(tripId).collect { result ->
                 if (result is Resource.Success) {
                     // Ordenamos por ID para mantener el orden cronológico de registro
@@ -99,8 +117,8 @@ class TripServicesViewModel(
             }
         }
 
-        viewModelScope.launch {
-
+        nextStepJob?.cancel()
+        nextStepJob = viewModelScope.launch {
             getNextStepUseCase(tripId).collect { result ->
                 when (result) {
                     is Resource.Success -> {
@@ -159,16 +177,20 @@ class TripServicesViewModel(
 
     fun deleteLastSegment() {
         val lastSegment = _uiState.value.segments.lastOrNull() ?: return
-        _uiState.update { it.copy(isLoading = true, isDeletingSegment = false) }
+        
+        // Optimistic UI change: Remove it immediately
+        val newSegments = _uiState.value.segments.toMutableList().apply { remove(lastSegment) }
+        _uiState.update { it.copy(segments = newSegments, isDeletingSegment = false) }
+
         viewModelScope.launch {
             deleteSegmentUseCase(lastSegment.id).collect { result ->
                 when (result) {
                     is Resource.Success -> {
-                        _uiState.update { it.copy(isLoading = false, createSuccess = "Tramo eliminado correctamente") }
                         loadData()
                     }
                     is Resource.Error -> {
-                        _uiState.update { it.copy(isLoading = false, error = result.message) }
+                        _uiState.update { it.copy(error = result.message) }
+                        loadData()
                     }
                     else -> {}
                 }
@@ -186,16 +208,33 @@ class TripServicesViewModel(
 
     fun updateSegment(request: org.rol.transportation.data.remote.dto.trip_services.UpdateSegmentRequest) {
         val segment = _uiState.value.editingSegment ?: return
-        _uiState.update { it.copy(isLoading = true, editingSegment = null) }
+        
+        // Optimistic UI update for Edit
+        val updatedSegments = _uiState.value.segments.toMutableList()
+        val index = updatedSegments.indexOfFirst { it.id == segment.id }
+        if (index != -1) {
+            val oldSegment = updatedSegments[index]
+            // Copy existing properties, replace only updated ones (like horaFinal or kilometraje if matched format)
+            // Just displaying optimistic changes in local UI state
+            val optimisticallyEdited = oldSegment.copy(
+                horaFinal = request.horaFinal ?: oldSegment.horaFinal,
+                kilometrajeFinal = request.kilometrajeFinal ?: oldSegment.kilometrajeFinal,
+                nombreLugar = request.nombreLugar ?: oldSegment.nombreLugar
+            )
+            updatedSegments[index] = optimisticallyEdited
+        }
+
+        _uiState.update { it.copy(segments = updatedSegments, editingSegment = null) }
+        
         viewModelScope.launch {
             updateSegmentUseCase(segment.id, request).collect { result ->
                 when (result) {
                     is Resource.Success -> {
-                        _uiState.update { it.copy(isLoading = false, createSuccess = "Tramo actualizado correctamente") }
                         loadData()
                     }
                     is Resource.Error -> {
-                        _uiState.update { it.copy(isLoading = false, error = result.message) }
+                        _uiState.update { it.copy(error = result.message) }
+                        loadData()
                     }
                     else -> {}
                 }

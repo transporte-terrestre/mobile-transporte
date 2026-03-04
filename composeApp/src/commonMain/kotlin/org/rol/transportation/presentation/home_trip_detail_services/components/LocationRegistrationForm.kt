@@ -58,7 +58,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import kotlinx.datetime.toLocalDateTime
 import org.rol.transportation.data.remote.dto.trip_services.NextStepDto
 import org.rol.transportation.domain.model.LocationModel
-import org.rol.transportation.platform.MapView
+import org.rol.transportation.presentation.map.MapViewWithLoading
 import org.rol.transportation.utils.DateFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -154,15 +154,18 @@ fun LocationRegistrationForm(
                 colors = CardDefaults.cardColors(containerColor = Color.LightGray)
             ) {
                 if (isLoadingLocation) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        org.rol.transportation.presentation.map.MapLoadingOverlay(modifier = Modifier.fillMaxSize())
                     }
                 } else if (currentLocation != null) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        MapView(
+                        MapViewWithLoading(
                             latitude = currentLocation.latitude,
                             longitude = currentLocation.longitude,
-                            title = "Mi Ubiación"
+                            title = "Mi Ubiación",
+                            modifier = Modifier.fillMaxSize(),
+                            isLiteMode = true,
+                            loadingDuration = 0L
                         )
                     }
                 } else {

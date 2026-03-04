@@ -6,11 +6,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.rol.transportation.domain.usecase.GetNextStepUseCase
+import kotlinx.datetime.Clock
 import org.rol.transportation.data.remote.dto.trip_services.RegisterLocationRequest
 import org.rol.transportation.domain.model.LocationModel
-import org.rol.transportation.domain.usecase.GetNextStepUseCase
 import org.rol.transportation.domain.usecase.RegisterArrivalUseCase
+import org.rol.transportation.utils.AppEventBus
 import org.rol.transportation.utils.Resource
 
 class RegisterArrivalViewModel(
@@ -27,14 +30,23 @@ class RegisterArrivalViewModel(
     }
 
     private fun loadData() {
-        _uiState.update { it.copy(isLoading = true, error = null) }
+        if (_uiState.value.nextStepData == null) {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+        }
+        println("ROLC_TAG: [RegisterArrivalViewModel] Fetching getNextStepUseCase(destino)...")
+        val start = kotlin.time.Clock.System.now().toEpochMilliseconds()
         viewModelScope.launch {
             getNextStepUseCase(tripId, "destino").collect { result ->
                 when (result) {
                     is Resource.Success -> {
+                        val duration = kotlin.time.Clock.System.now().toEpochMilliseconds() - start
+                        println("ROLC_TAG: [RegisterArrivalViewModel] getNextStepUseCase demoró ${duration}ms")
                         val data = result.data
                         val location = if (data.latitud != null && data.longitud != null) {
-                            LocationModel(latitude = data.latitud.toDouble(), longitude = data.longitud.toDouble())
+                            LocationModel(
+                                latitude = data.latitud.toDouble(),
+                                longitude = data.longitud.toDouble()
+                            )
                         } else null
                         
                         _uiState.update { it.copy(
@@ -77,16 +89,13 @@ class RegisterArrivalViewModel(
             rutaParadaId = nextStep.rutaParadaId
         )
 
-        viewModelScope.launch {
+        _uiState.update { it.copy(isRegistering = true, successMessage = "Terminando viaje...", error = null) }
+
+        GlobalScope.launch {
             registerArrivalUseCase(tripId, request).collect { result ->
                 when(result) {
-                    is Resource.Loading -> _uiState.update { it.copy(isRegistering = true, error = null) }
-                    is Resource.Success -> {
-                        _uiState.update { it.copy(isRegistering = false, successMessage = "Llegada registrada correctamente") }
-                    }
-                    is Resource.Error -> {
-                        _uiState.update { it.copy(isRegistering = false, error = result.message) }
-                    }
+                    is Resource.Success -> AppEventBus.triggerReload()
+                    else -> {}
                 }
             }
         }

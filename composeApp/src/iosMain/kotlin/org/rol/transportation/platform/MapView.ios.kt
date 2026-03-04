@@ -13,7 +13,8 @@ import platform.CoreLocation.CLLocationCoordinate2DMake
 actual fun MapView(
     latitude: Double,
     longitude: Double,
-    title: String
+    title: String,
+    isLiteMode: Boolean
 ) {
     UIKitView(
         modifier = Modifier.fillMaxSize(),
@@ -25,6 +26,8 @@ actual fun MapView(
             )
             val mapView = GMSMapView(frame = kotlinx.cinterop.CGRectMake(0.0, 0.0, 0.0, 0.0))
             mapView.camera = camera
+            
+
 
             // Marcador en la ubicación
             val marker = GMSMarker()

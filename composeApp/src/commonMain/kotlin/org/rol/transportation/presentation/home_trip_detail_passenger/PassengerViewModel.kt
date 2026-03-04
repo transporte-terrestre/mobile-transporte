@@ -2,6 +2,7 @@ package org.rol.transportation.presentation.home_trip_detail_passenger
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,17 +20,29 @@ class PassengerViewModel(
     private val _uiState = MutableStateFlow(PassengerUiState())
     val uiState: StateFlow<PassengerUiState> = _uiState.asStateFlow()
 
+    private var loadJob: Job? = null
+
     init {
         loadPassengers()
     }
 
     fun loadPassengers() {
-        viewModelScope.launch {
-            getPassengersUseCase(tripId, viajeTramoId).collect { result ->
+
+        if (_uiState.value.passengers.isEmpty()) {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+        }
+        
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            getPassengersUseCase(tripId).collect { result ->
                 when (result) {
-                    is Resource.Loading -> _uiState.update { it.copy(isLoading = true, error = null) }
+                    is Resource.Loading -> {
+                        if (_uiState.value.passengers.isEmpty()) {
+                            _uiState.update { it.copy(isLoading = true, error = null) }
+                        }
+                    }
                     is Resource.Success -> _uiState.update {
-                        it.copy(isLoading = false, passengers = result.data)
+                        it.copy(isLoading = false, passengers = result.data ?: emptyList())
                     }
                     is Resource.Error -> _uiState.update { it.copy(isLoading = false, error = result.message) }
                 }

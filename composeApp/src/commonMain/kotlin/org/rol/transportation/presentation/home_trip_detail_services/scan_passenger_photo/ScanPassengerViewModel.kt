@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.rol.transportation.domain.usecase.ScanDnisPhotosUseCase
 import org.rol.transportation.domain.usecase.UploadImageUseCase
+import org.rol.transportation.utils.AppEventBus
 import org.rol.transportation.utils.ImageCompressor
 import org.rol.transportation.utils.Resource
 import kotlin.time.Clock
@@ -128,6 +129,7 @@ class ScanPassengerViewModel(
                                 navigateBack = true
                             ) 
                         }
+                        AppEventBus.triggerReload()
                     }
                     is Resource.Error -> {
                         _uiState.update { it.copy(isUploading = false, error = result.message, navigateBack = true) }

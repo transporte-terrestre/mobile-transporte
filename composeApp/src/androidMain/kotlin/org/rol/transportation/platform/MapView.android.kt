@@ -11,7 +11,8 @@ import com.google.maps.android.compose.*
 actual fun MapView(
     latitude: Double,
     longitude: Double,
-    title: String
+    title: String,
+    isLiteMode: Boolean
 ) {
     val location = LatLng(latitude, longitude)
     val cameraPositionState = rememberCameraPositionState {
@@ -20,7 +21,12 @@ actual fun MapView(
 
     GoogleMap(
         modifier = Modifier.fillMaxSize(),
-        cameraPositionState = cameraPositionState
+        cameraPositionState = cameraPositionState,
+        uiSettings = MapUiSettings(
+            zoomControlsEnabled = true,
+            scrollGesturesEnabled = true,
+            zoomGesturesEnabled = true
+        )
     ) {
         Marker(
             state = MarkerState(position = location),
