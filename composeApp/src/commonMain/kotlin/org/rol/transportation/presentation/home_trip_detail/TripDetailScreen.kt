@@ -276,19 +276,46 @@ private fun TripDetailContent(
         }
 
         DetailSectionCard(title = "CRONOGRAMA", icon = Icons.Default.Schedule) {
+            // Salida Programada
+            val salidaProg = segment.fechaSalidaProgramada
             TimelineItem(
-                label = "SALIDA ESTIMADA",
-                time = if (segment.fechaSalida.isNotEmpty()) DateFormatter.formatOnlyTime(segment.fechaSalida) else "--:--",
-                date = if (segment.fechaSalida.isNotEmpty()) DateFormatter.formatOnlyDate(segment.fechaSalida) else "Sin Fecha",
+                label = "SALIDA PROGRAMADA",
+                time = if (salidaProg.isNotEmpty()) DateFormatter.formatOnlyTime(salidaProg) else "--:--",
+                date = if (salidaProg.isNotEmpty()) DateFormatter.formatOnlyDate(salidaProg) else "Sin Fecha",
                 isStart = true
             )
-            segment.fechaLlegada?.let { llegada ->
+
+            // Salida Real
+            if (segment.fechaSalida.isNotEmpty()) {
                 TimelineItem(
-                    label = "LLEGADA REAL",
-                    time = if (llegada.isNotEmpty()) DateFormatter.formatOnlyTime(llegada) else "--:--",
-                    date = if (llegada.isNotEmpty()) DateFormatter.formatOnlyDate(llegada) else "Sin Fecha",
+                    label = "SALIDA REAL",
+                    time = DateFormatter.formatOnlyTime(segment.fechaSalida),
+                    date = DateFormatter.formatOnlyDate(segment.fechaSalida),
+                    isStart = true
+                )
+            }
+
+            // Llegada Programada
+            val llegadaProg = segment.fechaLlegadaProgramada
+            if (!llegadaProg.isNullOrEmpty()) {
+                TimelineItem(
+                    label = "LLEGADA PROGRAMADA",
+                    time = DateFormatter.formatOnlyTime(llegadaProg),
+                    date = DateFormatter.formatOnlyDate(llegadaProg),
                     isStart = false
                 )
+            }
+
+            // Llegada Real
+            segment.fechaLlegada?.let { llegada ->
+                if (llegada.isNotEmpty()) {
+                    TimelineItem(
+                        label = "LLEGADA REAL",
+                        time = DateFormatter.formatOnlyTime(llegada),
+                        date = DateFormatter.formatOnlyDate(llegada),
+                        isStart = false
+                    )
+                }
             }
         }
 

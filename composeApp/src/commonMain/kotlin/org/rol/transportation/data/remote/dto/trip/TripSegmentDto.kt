@@ -18,6 +18,8 @@ data class TripSegmentDto (
     val turno: String? = null,
     val sentido: String? = null,
     val numeroVale: String? = null,
+    val fechaSalidaProgramada: String? = null,
+    val fechaLlegadaProgramada: String? = null,
     val fechaSalida: String? = null,
     val fechaLlegada: String? = null,
     val vehiculoPrincipal: VehicleDto? = null,

@@ -10,6 +10,8 @@ data class TripSegment(
     val conductorPrincipal: Driver?,
     val vehiculoPrincipal: Vehicle?,
     val estado: TripStatus,
+    val fechaSalidaProgramada: String,
+    val fechaLlegadaProgramada: String?,
     val fechaSalida: String,
     val fechaLlegada: String?,
     val distanciaEstimada: String?,

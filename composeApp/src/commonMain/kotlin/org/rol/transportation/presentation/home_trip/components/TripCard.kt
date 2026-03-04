@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -139,18 +140,23 @@ fun TripSegmentRow(segment: org.rol.transportation.domain.model.TripSegment, isS
 
                 Spacer(Modifier.width(8.dp))
 
-                // Hora y Fecha
+                // Hora y Fecha - ícono cambia según si ya inició o es programado
+                val yaInicio = segment.fechaSalida.isNotEmpty()
+                val iconoFecha = if (yaInicio) Icons.Default.PlayArrow else Icons.Default.Schedule
+                val colorIconoFecha = if (yaInicio) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurfaceVariant
+
                 Icon(
-                    imageVector = Icons.Default.Schedule,
+                    imageVector = iconoFecha,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = colorIconoFecha
                 )
                 Spacer(Modifier.width(4.dp))
                 
-                val dateStr = if (segment.fechaSalida.isNotEmpty()) {
-                    val time = DateFormatter.formatOnlyTime(segment.fechaSalida).replace(" AM", "").replace(" PM", "")
-                    "$time - ${DateFormatter.formatOnlyDate(segment.fechaSalida)}"
+                val fechaFuente = segment.fechaSalida.ifEmpty { segment.fechaSalidaProgramada }
+                val dateStr = if (fechaFuente.isNotEmpty()) {
+                    val time = DateFormatter.formatOnlyTime(fechaFuente).replace(" AM", "").replace(" PM", "")
+                    "$time - ${DateFormatter.formatOnlyDate(fechaFuente)}"
                 } else {
                     "Fecha sin asignar"
                 }
@@ -158,7 +164,7 @@ fun TripSegmentRow(segment: org.rol.transportation.domain.model.TripSegment, isS
                 Text(
                     text = dateStr,
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = colorIconoFecha
                 )
             }
 

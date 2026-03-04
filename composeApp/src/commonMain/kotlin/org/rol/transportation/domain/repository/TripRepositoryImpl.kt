@@ -122,6 +122,8 @@ class TripRepositoryImpl(
                 )
             },
             estado = TripStatus.fromString(estado ?: "programado"), // Fallback if missing
+            fechaSalidaProgramada = fechaSalidaProgramada ?: "",
+            fechaLlegadaProgramada = fechaLlegadaProgramada,
             fechaSalida = fechaSalida ?: "",
             fechaLlegada = fechaLlegada,
             distanciaEstimada = distanciaEstimada,
