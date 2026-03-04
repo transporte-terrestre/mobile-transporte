@@ -2,11 +2,14 @@ package org.rol.transportation.presentation.home_trip_detail_services.register_c
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.rol.transportation.utils.AppEventBus
 import org.rol.transportation.data.remote.dto.trip_services.RegisterLocationRequest
 import org.rol.transportation.domain.model.LocationModel
 import org.rol.transportation.domain.usecase.GetNextStepUseCase
@@ -27,7 +30,9 @@ class RegisterCheckpointViewModel(
     }
 
     private fun loadData() {
-        _uiState.update { it.copy(isLoading = true, error = null) }
+        if (_uiState.value.nextStepData == null) {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+        }
         viewModelScope.launch {
             // Usually we fetch passing "punto" (or leave it empty based on backend)
             getNextStepUseCase(tripId, "punto").collect { result ->
@@ -57,6 +62,7 @@ class RegisterCheckpointViewModel(
         _uiState.update { it.copy(error = null, successMessage = null) }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun registerCheckpoint(
         horaActual: String,
         kilometrajeActual: Double,
@@ -76,16 +82,18 @@ class RegisterCheckpointViewModel(
             rutaParadaId = nextStep.rutaParadaId
         )
 
-        viewModelScope.launch {
+        _uiState.update { it.copy(isRegistering = true, successMessage = "Guardando...", error = null) }
+
+        GlobalScope.launch {
             registerCheckpointUseCase(tripId, request).collect { result ->
                 when(result) {
-                    is Resource.Loading -> _uiState.update { it.copy(isRegistering = true, error = null) }
                     is Resource.Success -> {
-                        _uiState.update { it.copy(isRegistering = false, successMessage = "Punto registrado correctamente") }
+                        AppEventBus.triggerReload()
                     }
                     is Resource.Error -> {
-                        _uiState.update { it.copy(isRegistering = false, error = result.message) }
+                        // Optimally we'd show an error toast, but we've navigated away
                     }
+                    else -> {}
                 }
             }
         }

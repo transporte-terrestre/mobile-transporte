@@ -23,7 +23,7 @@ fun RegisterArrivalScreen(
 
     LocationRegistrationForm(
         title = "Registrar Llegada",
-        isLoadingLocation = uiState.isLocationLoading,
+        isLoadingLocation = uiState.isLoading || uiState.isLocationLoading,
         isRegistering = uiState.isRegistering,
         nextStepData = uiState.nextStepData,
         currentLocation = uiState.currentLocation,

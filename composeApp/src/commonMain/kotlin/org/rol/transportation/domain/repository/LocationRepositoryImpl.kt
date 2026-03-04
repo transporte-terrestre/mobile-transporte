@@ -19,4 +19,7 @@ class LocationRepositoryImpl(
 
     override fun openLocationSettings() =
         dataSource.openLocationSettings()
+
+    override fun stopUpdates() =
+        dataSource.stopUpdates()
 }

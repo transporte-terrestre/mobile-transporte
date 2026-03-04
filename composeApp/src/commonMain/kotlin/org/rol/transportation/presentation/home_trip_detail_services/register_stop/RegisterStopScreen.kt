@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
@@ -168,17 +169,30 @@ fun RegisterStopScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Mapa
-                if (uiState.currentLocation != null) {
+                if (uiState.isLoading || uiState.isLocationLoading) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(200.dp)
                             .clip(RoundedCornerShape(12.dp))
                     ) {
-                        org.rol.transportation.platform.MapView(
+                        org.rol.transportation.presentation.map.MapLoadingOverlay(modifier = Modifier.fillMaxSize())
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
+                } else if (uiState.currentLocation != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    ) {
+                        org.rol.transportation.presentation.map.MapViewWithLoading(
                             latitude = uiState.currentLocation!!.latitude,
                             longitude = uiState.currentLocation!!.longitude,
-                            title = "Mi Ubicación"
+                            title = "Mi Ubicación",
+                            modifier = Modifier.fillMaxSize(),
+                            isLiteMode = true,
+                            loadingDuration = 0L
                         )
                     }
                     Spacer(modifier = Modifier.height(24.dp))

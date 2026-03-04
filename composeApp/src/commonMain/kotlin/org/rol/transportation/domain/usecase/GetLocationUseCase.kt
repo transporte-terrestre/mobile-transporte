@@ -14,4 +14,6 @@ class GetLocationUseCase(
     fun isLocationEnabled(): Boolean = repository.isLocationEnabled()
 
     fun openLocationSettings() = repository.openLocationSettings()
+
+    fun stopUpdates() = repository.stopUpdates()
 }
